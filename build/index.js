@@ -1,13 +1,4 @@
-;(function(root, factory) {
-  if (typeof define === 'function' && define.amd) {
-    define([], factory);
-  } else if (typeof exports === 'object') {
-    module.exports = factory();
-  } else {
-    root.Index = factory();
-  }
-}(this, function() {
-export class Observable {
+export default class Observable {
     constructor(...args) {
       let values = args;
   
@@ -43,5 +34,3 @@ export class Observable {
 }
   
   
-return Index;
-}));

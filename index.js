@@ -1,4 +1,4 @@
-export class Observable {
+export default class Observable {
     constructor(...args) {
       let values = args;
   
