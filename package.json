@@ -1,0 +1,26 @@
+{
+  "name": "observable-eemi-js",
+  "version": "1.0.0",
+  "description": "A simple Observable utility library",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nugetchar/2AWD20202021EEMIJS.git"
+  },
+  "keywords": [
+    "observable",
+    "reactive",
+    "js",
+    "javascript",
+    "utility"
+  ],
+  "author": "Thomas Toledo-Pierre <nugetchar@gmail.com> (https://twitter.com/nugetchar)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nugetchar/2AWD20202021EEMIJS/issues"
+  },
+  "homepage": "https://github.com/nugetchar/2AWD20202021EEMIJS#readme"
+}
