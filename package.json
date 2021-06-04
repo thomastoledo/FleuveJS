@@ -2,8 +2,9 @@
   "name": "observable-eemi-js",
   "version": "1.0.0",
   "description": "A simple Observable utility library",
-  "main": "index.js",
+  "main": "build/index.js",
   "scripts": {
+    "build": "gulp umd",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -22,5 +23,9 @@
   "bugs": {
     "url": "https://github.com/nugetchar/2AWD20202021EEMIJS/issues"
   },
-  "homepage": "https://github.com/nugetchar/2AWD20202021EEMIJS#readme"
+  "homepage": "https://github.com/nugetchar/2AWD20202021EEMIJS#readme",
+  "dependencies": {
+    "gulp": "^4.0.2",
+    "gulp-umd": "^2.0.0"
+  }
 }
