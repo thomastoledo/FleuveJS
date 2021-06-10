@@ -40,3 +40,21 @@ fleuve$.subscribe((value) => console.log(value));
 // This one will throw an error
 fleuve$.subscribe(42);
 ```
+
+
+## Nex Features
+
+### Allow to specify a event handler:
+
+```html
+<button id="clickMe">Click Me</button>
+```
+
+```js
+const fleuve$ = new Fleuve();
+fleuve$.addEventListener('#clickMe', (event, x) => console.log(event, x))
+```
+
+### Allow to work with Promises
+### Allow to work with RxJs Observables
+### More operators

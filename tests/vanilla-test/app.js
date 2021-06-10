@@ -1,4 +1,4 @@
-import { Fleuve } from '../../index.js';
+import { Fleuve } from 'https://unpkg.com/fleuvejs@latest/index.js';
 
 
 const counter$ = new Fleuve(0);
