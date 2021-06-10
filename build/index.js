@@ -3,29 +3,40 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Observable = void 0;
+exports.Fleuve = void 0;
 
-class Observable {
-  constructor() {
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    var values = args;
+class Fleuve {
+  constructor(source) {
+    var _innerSource = source;
     var subscribers = [];
 
     this.next = function () {
-      for (var _len2 = arguments.length, vals = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-        vals[_key2] = arguments[_key2];
+      for (var _len = arguments.length, events = new Array(_len), _key = 0; _key < _len; _key++) {
+        events[_key] = arguments[_key];
       }
 
-      values = vals;
-      subscribers.forEach(f => f(...values));
+      if (events.some(event => isFunction(event))) {
+        throw new Error('Please provide either only scalar values or only functions');
+      }
+
+      events.forEach(event => {
+        if (isFunction(event)) {
+          _innerSource = event(_innerSource);
+        } else {
+          _innerSource = event;
+        }
+
+        subscribers.forEach(f => f(_innerSource));
+      });
     };
 
     this.subscribe = f => {
+      if (!isFunction(f)) {
+        throw new Error('Please provide a function');
+      }
+
       subscribers.push(f);
-      f(...values);
+      f(_innerSource);
     };
 
     this.pipe = function () {
@@ -33,7 +44,7 @@ class Observable {
       var obs = new Observable();
 
       if (fns.length > 0) {
-        var res = fns.slice(1).reduce((val, fn) => fn(val), fns[0](...values));
+        var res = fns.slice(1).reduce((val, fn) => fn(val), fns[0](_innerSource));
         obs.next(res);
       }
 
@@ -41,14 +52,16 @@ class Observable {
     };
 
     var filterNonFunctions = function filterNonFunctions() {
-      for (var _len3 = arguments.length, fns = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-        fns[_key3] = arguments[_key3];
+      for (var _len2 = arguments.length, fns = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+        fns[_key2] = arguments[_key2];
       }
 
-      return fns.filter(f => typeof f === 'function');
+      return fns.filter(f => isFunction(f));
     };
+
+    var isFunction = fn => typeof fn === 'function';
   }
 
 }
 
-exports.Observable = Observable;
+exports.Fleuve = Fleuve;

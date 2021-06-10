@@ -1,14 +1,14 @@
 {
-  "name": "toledobservable",
+  "name": "FleuveJS",
   "version": "1.0.5",
-  "description": "A simple JavaScript Observable Implementation",
+  "description": "A simple JavaScript Observable Library",
   "main": "build/index.js",
   "scripts": {
     "build": "babel index.js -d build"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nugetchar/ToledObservable.git"
+    "url": "git+https://github.com/nugetchar/FleuveJS.git"
   },
   "keywords": [
     "observable",
