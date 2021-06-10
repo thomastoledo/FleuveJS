@@ -48,7 +48,7 @@ fleuve$.subscribe(42);
 ```
 
 
-## Nex Features
+## Next Features
 
 ### Allow to specify a event handler:
 
