@@ -5,7 +5,7 @@ A simple Observable Utility library
 ## Installation
 `npm i fleuvejs`
 
-To use for frontend project, for now you can use the latest version with UnPkg:
+To use for frontend projects, for now you can use the latest version with UnPkg:
 
 ```js
 import { Fleuve } from 'https://unpkg.com/fleuvejs@latest/index.js';
