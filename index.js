@@ -5,7 +5,6 @@ export class Fleuve {
     const subscribers = [];
 
     this.next = (...events) => {
-      // (A || B) && !(A && B) 
       const onlyFunctions = events.every(event => isFunction(event));
       const onlyScalar = events.every(event => !isFunction(event)); 
       if (!onlyFunctions && !onlyScalar) {
