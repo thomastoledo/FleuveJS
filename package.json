@@ -1,6 +1,6 @@
 {
   "name": "fleuvejs",
-  "version": "1.0.-",
+  "version": "1.0.6",
   "description": "A simple JavaScript Observable Library",
   "main": "build/index.js",
   "scripts": {
@@ -20,9 +20,9 @@
   "author": "Thomas Toledo-Pierre <nugetchar@gmail.com> (https://twitter.com/nugetchar)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/nugetchar/ToledObservable/issues"
+    "url": "https://github.com/nugetchar/FleuveJs/issues"
   },
-  "homepage": "https://github.com/nugetchar/ToledObservable#readme",
+  "homepage": "https://github.com/nugetchar/FleuveJs#readme",
   "devDependencies": {
     "@babel/cli": "^7.14.3",
     "@babel/core": "^7.14.3",
