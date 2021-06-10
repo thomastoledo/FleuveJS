@@ -4,7 +4,7 @@
   "description": "A simple JavaScript Observable Implementation",
   "main": "build/index.js",
   "scripts": {
-    "build": "babel index.js -d build",
+    "build": "babel index.js -d build"
   },
   "repository": {
     "type": "git",
