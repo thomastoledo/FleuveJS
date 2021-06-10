@@ -1,6 +1,6 @@
 {
-  "name": "FleuveJS",
-  "version": "1.0.5",
+  "name": "fleuvejs",
+  "version": "1.0.-",
   "description": "A simple JavaScript Observable Library",
   "main": "build/index.js",
   "scripts": {
