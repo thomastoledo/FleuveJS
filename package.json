@@ -1,15 +1,14 @@
 {
-  "name": "observable-eemi-js",
-  "version": "1.0.4",
-  "description": "A simple Observable utility library",
+  "name": "toledobservable",
+  "version": "1.0.5",
+  "description": "A simple JavaScript Observable Implementation",
   "main": "build/index.js",
   "scripts": {
-    "build": "gulp umd_task",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "babel index.js -d build",
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nugetchar/2AWD20202021EEMIJS.git"
+    "url": "git+https://github.com/nugetchar/ToledObservable.git"
   },
   "keywords": [
     "observable",
@@ -21,11 +20,14 @@
   "author": "Thomas Toledo-Pierre <nugetchar@gmail.com> (https://twitter.com/nugetchar)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/nugetchar/2AWD20202021EEMIJS/issues"
+    "url": "https://github.com/nugetchar/ToledObservable/issues"
   },
-  "homepage": "https://github.com/nugetchar/2AWD20202021EEMIJS#readme",
-  "dependencies": {
-    "gulp": "^4.0.2",
-    "gulp-umd": "^2.0.0"
+  "homepage": "https://github.com/nugetchar/ToledObservable#readme",
+  "devDependencies": {
+    "@babel/cli": "^7.14.3",
+    "@babel/core": "^7.14.3",
+    "@babel/plugin-transform-modules-commonjs": "^7.14.0",
+    "@babel/plugin-transform-modules-umd": "^7.14.0",
+    "@babel/preset-env": "^7.14.4"
   }
 }
