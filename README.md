@@ -40,17 +40,14 @@ const sum$ = fleuve$.pipe(
 
 ### Subscribe
 ```js
-const fleuve$ = new Fleuve(12;
+const fleuve$ = new Fleuve(12);
 fleuve$.subscribe((value) => console.log(value));
 
 // This one will throw an error
 fleuve$.subscribe(42);
+
 ```
-
-
-## Next Features
-
-### Allow to specify a event handler:
+### Add an event listener:
 
 ```html
 <button id="clickMe">Click Me</button>
@@ -58,9 +55,15 @@ fleuve$.subscribe(42);
 
 ```js
 const fleuve$ = new Fleuve();
-fleuve$.addEventListener('#clickMe', (event, x) => console.log(event, x))
+const eventSubscription = fleuve$.addEventListener('#clickMe', 'click', (x, event) => console.log(x, event))
 ```
 
+### Remove an event listener
+```js
+eventSubscription.unsubscribe();
+```
+
+## Next Features
 ### Allow to work with Promises
 ### Allow to work with RxJs Observables
 ### More operators

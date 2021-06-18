@@ -6,7 +6,7 @@ export class Fleuve {
 
     this.next = (...events) => {
       const onlyFunctions = events.every(event => isFunction(event));
-      const onlyScalar = events.every(event => !isFunction(event)); 
+      const onlyScalar = events.every(event => !isFunction(event));
       if (!onlyFunctions && !onlyScalar) {
         throw new Error('Please provide either only scalar values or only functions');
       }
@@ -38,8 +38,27 @@ export class Fleuve {
       return obs;
     };
 
+    this.addEventListener = (selector, eventType, listener, options) => {
+      const elem = document.querySelector(selector);
+      const eventListener = (event) => {
+        listener(_innerSource, event);
+      }
+      elem?.addEventListener(eventType, eventListener, options);
+
+      return new EventSubscription(elem, eventType, eventListener);
+    }
+
     const filterNonFunctions = (...fns) => fns.filter((f) => isFunction(f));
 
     const isFunction = (fn) => typeof fn === 'function';
+  }
+}
+
+
+export class EventSubscription {
+  constructor(elem, eventType, listener) {
+    this.unsubscribe = () => {
+      elem?.removeEventListener(eventType, listener)
+    };
   }
 }

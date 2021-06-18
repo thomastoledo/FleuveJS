@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Fleuve = void 0;
+exports.EventSubscription = exports.Fleuve = void 0;
 
 class Fleuve {
   constructor(source) {
@@ -15,7 +15,10 @@ class Fleuve {
         events[_key] = arguments[_key];
       }
 
-      if (events.some(event => isFunction(event))) {
+      var onlyFunctions = events.every(event => isFunction(event));
+      var onlyScalar = events.every(event => !isFunction(event));
+
+      if (!onlyFunctions && !onlyScalar) {
         throw new Error('Please provide either only scalar values or only functions');
       }
 
@@ -51,6 +54,17 @@ class Fleuve {
       return obs;
     };
 
+    this.addEventListener = (selector, eventType, listener, options) => {
+      var elem = document.querySelector(selector);
+
+      var eventListener = event => {
+        listener(_innerSource, event);
+      };
+
+      elem === null || elem === void 0 ? void 0 : elem.addEventListener(eventType, eventListener, options);
+      return new EventSubscription(elem, eventType, eventListener);
+    };
+
     var filterNonFunctions = function filterNonFunctions() {
       for (var _len2 = arguments.length, fns = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
         fns[_key2] = arguments[_key2];
@@ -65,3 +79,14 @@ class Fleuve {
 }
 
 exports.Fleuve = Fleuve;
+
+class EventSubscription {
+  constructor(elem, eventType, listener) {
+    this.unsubscribe = () => {
+      elem === null || elem === void 0 ? void 0 : elem.removeEventListener(eventType, listener);
+    };
+  }
+
+}
+
+exports.EventSubscription = EventSubscription;
