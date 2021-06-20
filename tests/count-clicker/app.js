@@ -1,4 +1,4 @@
-import { Fleuve } from '../../index.js';
+import { Fleuve } from '../../build/index.js';
 
 
 const counter$ = new Fleuve(0);
