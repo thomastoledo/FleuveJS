@@ -1,15 +1,14 @@
 {
     "compilerOptions": {
+        "baseUrl": "./src",
         "strict": true,
-        "target": "esnext",
-        "declaration": true,
-        "outDir": "build",
+        "target": "ES6",
         "rootDir": "src",
         "moduleResolution": "Node",
         "lib": [
             "dom",
             "esnext"
-        ]
+        ],
     },
     "exclude": [
         "**/*.test.ts",

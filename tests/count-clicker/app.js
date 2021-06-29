@@ -1,5 +1,4 @@
-import { Fleuve } from '../../build/index.js';
-
+import { Fleuve } from '../../bundle/fleuve.bundle.js';
 
 const counter$ = new Fleuve(0);
 const counter = document.getElementById('counter');
