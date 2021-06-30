@@ -13,6 +13,12 @@ export class Fleuve<T = never> {
     this._isStarted = arguments.length > 0;
   }
 
+  dam(): void {
+    this._isComplete = true;
+    // TODO - TTO: rajouter un onError et un onComplete sur les subscribers pour pouvoir tous les exécuter
+    this._forks$.forEach(fork$ => fork$.dam());
+  }
+
   addEventListener(
     selector: string,
     eventType: string,
