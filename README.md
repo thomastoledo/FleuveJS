@@ -62,19 +62,16 @@ const eventSubscription = fleuve$.addEventListener('#clickMe', 'click', (x, even
 ```js
 eventSubscription.unsubscribe();
 ```
-## Operators
+### Operators
 `map` and `filter` operators are now available! You can use them that way:
 
 ```ts
 const fleuve$ = new Fleuve(12);
 fleuve$.pipe(filter(x => !!x), map(x => x * 2)).subscribe((value) => console.log(value));
 ```
-## Next Features
-### Prevent emiting when a filter has stopped the Fleuve
-Right now it emit an `undefined` value.
 
-### Add the `fork` method
-Should allow to fork a Fleuve. The new Fleuve would still be connected to the original Fleuve, but with some intermediaries operations.
+### `fork` the Fleuve
+You can fork a Fleuve. The new Fleuve will still be connected to the original Fleuve, but with some intermediaries operations.
 
 ```ts
 const fleuve$ = new Fleuve(12);
@@ -82,6 +79,11 @@ const forked$ = fleuve$.fork(filter(x => x > 15));
 forked$.subscribe(x => console.log(x)); // nothing would happen at first
 fleuve$.next(20); // now, 20 would be printed in the browser's console
 ```
+
+## Next Features
+### Prevent emiting when a filter has stopped the Fleuve
+Right now it emit an `undefined` value.
+
 ### Add the `dam` method
 Should stop a Fleuve and all its forks. No more values would be allowed.
 
