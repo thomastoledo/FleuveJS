@@ -12,66 +12,44 @@ export class Fleuve<T = any> implements IFleuve {
   private readonly subscribers: Function[] = [];
 
   private _parent$?: IFleuve;
-  private _forkOperations: OperatorFunction<T | undefined>[] = [];
-  private _skipValue: boolean = false;
+  private _preProcessOperations: OperatorFunction<T | undefined>[] = [];
+  private _isError: boolean = false;
 
   constructor(private _innerSource?: T) {}
 
   next(...events: T[] | NextCallback<T>[]) {
-    const onlyFunctions = (events as Array<T | NextCallback<T>>).every(
-      (event) => this.isFunction(event)
-    );
-    const onlyScalar = (events as Array<T | NextCallback<T>>).every(
-      (event) => !this.isFunction(event)
-    );
-
-    if (!onlyFunctions && !onlyScalar) {
-      throw new Error(
-        "Please provide either only scalar values or only functions"
-      );
-    }
-
+    this._isOnlyFunctionsOrOnlyScalars(events);
     events.forEach((event: T | NextCallback<T>) => {
-      let res;
-      if (this.isFunction(event)) {
-        res = (event as NextCallback<T | undefined>)(
-          this._innerSource
-        );
-      } else {
-        res = event as T;
-      }
       try {
-        this._innerSource = this._forkOperations.reduce((val, f) =>f(val), res);
-        this._skipValue = false;
+        this._innerSource = this._preProcessOperations.reduce(
+          (val, f) => f(val),
+          this._nextEvent(event)
+        );
+        this._isError = false;
         this.subscribers.forEach((f) => f(this._innerSource));
-      } catch (err) {
-        this._skipValue = err instanceof FilterError;
+      } catch {
+        this._isError = true;
       }
     });
   }
 
   subscribe(subscriber: Subscriber<T | undefined>) {
-    if (!this.isFunction(subscriber)) {
+    if (!this._isFunction(subscriber)) {
       throw new Error("Please provide a function");
     }
     this.subscribers.push(subscriber);
-    if (!this._skipValue) {
+    if (!this._isError) {
       subscriber(this._innerSource);
     }
   }
 
-  pipe(...functions: OperatorFunction<T>[]) {
-    const fns = this.filterNonFunctions(...functions);
+  pipe(...operations: OperatorFunction<T>[]) {
     const fleuve$ = new Fleuve();
-    if (fns.length > 0) {
-      try {
-        const res = fns
-          .slice(1)
-          .reduce((val, fn) => fn(val), fns[0](this._innerSource));
-        fleuve$.next(res);
-      } catch (err) {
-        fleuve$._skipValue =  err instanceof FilterError;
-      }
+    try {
+      const value = this._computeValue(...this._filterNonFunctions(...operations));
+      fleuve$.next(value);
+    } catch {
+      fleuve$._isError = true;
     }
     return fleuve$;
   }
@@ -79,9 +57,11 @@ export class Fleuve<T = any> implements IFleuve {
   fork(...operators: OperatorFunction<T>[]): IFleuve {
     const fork$: Fleuve = new Fleuve();
     fork$._parent$ = this;
-    fork$._forkOperations = operators;
+    fork$._preProcessOperations = operators;
 
-    this.subscribe((value: T | undefined) => {fork$.next(value)});
+    this.subscribe((value: T | undefined) => {
+      fork$.next(value);
+    });
     return fork$;
   }
 
@@ -90,26 +70,58 @@ export class Fleuve<T = any> implements IFleuve {
     eventType: string,
     listener: Listener<T | undefined>,
     options: AddEventListenerOptions
-  ) {
+  ): EventSubscription {
     const elem = document.querySelector(selector);
 
     if (!elem) {
       throw new Error(`Could not find any element with selector "${selector}"`);
     }
 
-    const eventListener: EventListener = (event: Event) =>
-      listener(this._innerSource, event);
+    const eventListener: EventListener = (event: Event) => listener(this._innerSource, event);
 
     elem.addEventListener(eventType, eventListener, options);
 
     return new EventSubscription(elem, eventType, eventListener);
   }
 
-  private filterNonFunctions(...fns: any[]): Function[] {
-    return fns.filter((f) => this.isFunction(f));
+  private _filterNonFunctions(...fns: any[]): OperatorFunction<T | undefined>[] {
+    return fns.filter((f) => this._isFunction(f));
   }
 
-  private isFunction(fn: any): boolean {
+  private _isFunction(fn: any): boolean {
     return typeof fn === "function";
+  }
+
+  private _isOnlyFunctionsOrOnlyScalars(events: T[] | NextCallback<T>[]): void {
+    const onlyFunctions = (events as Array<T | NextCallback<T>>).every(
+      (event) => this._isFunction(event)
+    );
+    const onlyScalar = (events as Array<T | NextCallback<T>>).every(
+      (event) => !this._isFunction(event)
+    );
+
+    if (!onlyFunctions && !onlyScalar) {
+      throw new Error(
+        "Please provide either only scalar values or only functions"
+      );
+    }
+  }
+
+  private _nextEvent(event: T | NextCallback<T>) {
+    let res;
+    if (this._isFunction(event)) {
+      res = (event as NextCallback<T | undefined>)(this._innerSource);
+    } else {
+      res = event as T;
+    }
+    return res;
+  }
+
+  private _computeValue(...operations: OperatorFunction<T | undefined>[]) {
+    if (operations.length > 0) {
+      return operations
+        .slice(1)
+        .reduce((val, fn) => fn(val), operations[0](this._innerSource));
+    }
   }
 }
