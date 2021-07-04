@@ -5,14 +5,17 @@ export declare class Fleuve<T = any> implements IFleuve {
     private _innerSource?;
     private readonly subscribers;
     private _parent$?;
-    private _forkOperations;
-    private _skipValue;
+    private _preProcessOperations;
+    private _isError;
     constructor(_innerSource?: T | undefined);
     next(...events: T[] | NextCallback<T>[]): void;
     subscribe(subscriber: Subscriber<T | undefined>): void;
-    pipe(...functions: OperatorFunction<T>[]): Fleuve<any>;
+    pipe(...operations: OperatorFunction<T>[]): Fleuve<any>;
     fork(...operators: OperatorFunction<T>[]): IFleuve;
     addEventListener(selector: string, eventType: string, listener: Listener<T | undefined>, options: AddEventListenerOptions): EventSubscription;
-    private filterNonFunctions;
-    private isFunction;
+    private _filterNonFunctions;
+    private _isFunction;
+    private _isOnlyFunctionsOrOnlyScalars;
+    private _nextEvent;
+    private _computeValue;
 }

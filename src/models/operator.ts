@@ -3,4 +3,4 @@ export interface Operator<T = any, U = any> {
 }
 
 export type OperatorCallback<T, U> = (t: T) => U;
-export type OperatorFunction<T, U = T> = (source: T) => U;
+export type OperatorFunction<T, U = any> = (source: T) => U;

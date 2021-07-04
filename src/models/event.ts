@@ -1,4 +1,4 @@
-export interface Subscriber<T> {
+export interface Subscriber<T = any> {
   (value: T): void;
 }
 
@@ -11,10 +11,6 @@ export class EventSubscription {
   unsubscribe = () => {
     this.elem?.removeEventListener(this.eventType, this.listener);
   };
-}
-
-export interface NextCallback<T> {
-  (source: T): T;
 }
 
 export interface Listener<T> {
