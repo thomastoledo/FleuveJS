@@ -1,4 +1,4 @@
-export interface Subscriber<T> {
+export interface Subscriber<T = any> {
   (value: T): void;
 }
 
@@ -13,10 +13,6 @@ export class EventSubscription {
   };
 }
 
-export interface NextCallback<T> {
-  (source: T): T;
-}
-
-export interface Listener<T> {
+export interface Listener<T = never> {
   (source: T, event: Event): any;
 }

@@ -1,68 +1,53 @@
-import { FilterError } from "./models/errors";
 import { EventSubscription, } from "./models/event";
 export class Fleuve {
     _innerSource;
     subscribers = [];
     _parent$;
-    _forkOperations = [];
-    _skipValue = false;
+    _preProcessOperations = [];
+    _isError = false;
     constructor(_innerSource) {
         this._innerSource = _innerSource;
     }
     next(...events) {
-        const onlyFunctions = events.every((event) => this.isFunction(event));
-        const onlyScalar = events.every((event) => !this.isFunction(event));
-        if (!onlyFunctions && !onlyScalar) {
-            throw new Error("Please provide either only scalar values or only functions");
-        }
+        this._isOnlyFunctionsOrOnlyScalars(events);
         events.forEach((event) => {
-            let res;
-            if (this.isFunction(event)) {
-                res = event(this._innerSource);
-            }
-            else {
-                res = event;
-            }
             try {
-                this._innerSource = this._forkOperations.reduce((val, f) => f(val), res);
-                this._skipValue = false;
+                this._innerSource = this._preProcessOperations.reduce((val, f) => f(val), this._nextEvent(event));
+                this._isError = false;
                 this.subscribers.forEach((f) => f(this._innerSource));
             }
-            catch (err) {
-                this._skipValue = err instanceof FilterError;
+            catch {
+                this._isError = true;
             }
         });
     }
     subscribe(subscriber) {
-        if (!this.isFunction(subscriber)) {
+        if (!this._isFunction(subscriber)) {
             throw new Error("Please provide a function");
         }
         this.subscribers.push(subscriber);
-        if (!this._skipValue) {
+        if (!this._isError) {
             subscriber(this._innerSource);
         }
     }
-    pipe(...functions) {
-        const fns = this.filterNonFunctions(...functions);
+    pipe(...operations) {
         const fleuve$ = new Fleuve();
-        if (fns.length > 0) {
-            try {
-                const res = fns
-                    .slice(1)
-                    .reduce((val, fn) => fn(val), fns[0](this._innerSource));
-                fleuve$.next(res);
-            }
-            catch (err) {
-                fleuve$._skipValue = err instanceof FilterError;
-            }
+        try {
+            const value = this._computeValue(...this._filterNonFunctions(...operations));
+            fleuve$.next(value);
+        }
+        catch {
+            fleuve$._isError = true;
         }
         return fleuve$;
     }
     fork(...operators) {
         const fork$ = new Fleuve();
         fork$._parent$ = this;
-        fork$._forkOperations = operators;
-        this.subscribe((value) => { fork$.next(value); });
+        fork$._preProcessOperations = operators;
+        this.subscribe((value) => {
+            fork$.next(value);
+        });
         return fork$;
     }
     addEventListener(selector, eventType, listener, options) {
@@ -74,10 +59,34 @@ export class Fleuve {
         elem.addEventListener(eventType, eventListener, options);
         return new EventSubscription(elem, eventType, eventListener);
     }
-    filterNonFunctions(...fns) {
-        return fns.filter((f) => this.isFunction(f));
+    _filterNonFunctions(...fns) {
+        return fns.filter((f) => this._isFunction(f));
     }
-    isFunction(fn) {
+    _isFunction(fn) {
         return typeof fn === "function";
+    }
+    _isOnlyFunctionsOrOnlyScalars(events) {
+        const onlyFunctions = events.every((event) => this._isFunction(event));
+        const onlyScalar = events.every((event) => !this._isFunction(event));
+        if (!onlyFunctions && !onlyScalar) {
+            throw new Error("Please provide either only scalar values or only functions");
+        }
+    }
+    _nextEvent(event) {
+        let res;
+        if (this._isFunction(event)) {
+            res = event(this._innerSource);
+        }
+        else {
+            res = event;
+        }
+        return res;
+    }
+    _computeValue(...operations) {
+        if (operations.length > 0) {
+            return operations
+                .slice(1)
+                .reduce((val, fn) => fn(val), operations[0](this._innerSource));
+        }
     }
 }
