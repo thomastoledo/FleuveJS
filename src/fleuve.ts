@@ -8,6 +8,9 @@ export class Fleuve<T = never> {
   private _preProcessOperations: OperatorFunction<T, any>[] = [];
 
   private _isStarted: boolean = false;
+  private _isComplete: boolean = false;
+
+  private _forks$: Fleuve<T>[] = [];
 
   constructor(private _innerValue?: T) {
     this._isStarted = arguments.length > 0;
@@ -33,6 +36,14 @@ export class Fleuve<T = never> {
     return new EventSubscription(elem, eventType, eventListener);
   }
 
+  dam(): void {
+    // TODO - TTO: rajouter un onError et un onComplete sur les subscribers pour pouvoir tous les exécuter
+    this._forks$.forEach((fork$) => {
+      fork$.dam();
+      fork$._complete();
+    });
+  }
+
   fork(...operators: OperatorFunction<T>[]): Fleuve<T> {
     const fork$: Fleuve<T> = new Fleuve();
     fork$._preProcessOperations = operators;
@@ -50,20 +61,25 @@ export class Fleuve<T = never> {
         }
       }
     });
+    
+    this._forks$.push(fork$);
     return fork$;
   }
 
   next(...events: T[]): this {
-    if (!this._isStarted) {
-      this._isStarted = arguments.length > 0;
+    if (!this._isComplete) {
+      if (!this._isStarted) {
+        this._isStarted = arguments.length > 0;
+      }
+  
+      if (this._isStarted) {
+        events.forEach((event: T) => {
+          this._innerValue = event;
+          this._callSubscribers(event);
+        });
+      }
     }
 
-    if (this._isStarted) {
-      events.forEach((event: T) => {
-        this._innerValue = event;
-        this._callSubscribers(event);
-      });
-    }
 
     return this;
   }
@@ -109,7 +125,10 @@ export class Fleuve<T = never> {
     this._subscribers.forEach((s) => s(event));
   }
 
-  private _computeValue(initValue: T, ...operations: OperatorFunction<T>[]): any {
+  private _computeValue(
+    initValue: T,
+    ...operations: OperatorFunction<T>[]
+  ): any {
     if (operations.length > 0) {
       return operations
         .slice(1)
@@ -123,5 +142,9 @@ export class Fleuve<T = never> {
     listener: Listener<T>
   ): EventListener {
     return (event: Event) => listener(this._innerValue as T, event);
+  }
+
+  private _complete() {
+    this._isComplete = true;
   }
 }

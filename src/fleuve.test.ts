@@ -321,4 +321,19 @@ describe("Fleuve", () => {
       expect(listener).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe('dam', () => {
+    test('should stop forked Fleuves', () => {
+      const fleuve$ = new Fleuve<number>();
+      const fork1$ = fleuve$.fork();
+      const fork2$ = fleuve$.fork();
+      const fork3$ = fork2$.fork();
+      fleuve$.dam();
+      fork1$.subscribe(() => fail('fork1$ should have been damed'));
+      fork2$.subscribe(() => fail('fork1$ should have been damed'));
+      fork3$.subscribe(() => fail('fork1$ should have been damed'));
+      fleuve$.subscribe((x) => expect(x).toEqual(12));
+      fleuve$.next(12);
+    });
+  });
 });

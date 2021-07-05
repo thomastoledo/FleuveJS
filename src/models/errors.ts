@@ -1,6 +1,6 @@
 export class FilterError implements Error {
     name: string = 'FilterError';
+    message: string = 'Filter predicate was not matched';
 
-    constructor(public message: string = '', public stack?: string) {
-     }
+    constructor(public stack?: string) {}
 }
