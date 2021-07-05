@@ -1,40 +1,76 @@
 import { FilterError } from "./models/errors";
-import {
-  Subscriber,
-  Listener,
-  EventSubscription,
-} from "./models/event";
+import { Subscriber, Listener, EventSubscription } from "./models/event";
 import { OperatorFunction } from "./models/operator";
 
 export class Fleuve<T = never> {
   private readonly _subscribers: Subscriber<T>[] = [];
 
-  private _parent$?: Fleuve<any>;
   private _preProcessOperations: OperatorFunction<T, any>[] = [];
 
   private _isStarted: boolean = false;
 
   constructor(private _innerValue?: T) {
-    this._isStarted = this._isValueDefined(this._innerValue);
+    this._isStarted = arguments.length > 0;
   }
 
-  next(...events: T[]) {
-    events.forEach((event: T) => {
-      const value = event;
-      if (!this._isStarted) {
-        this._isStarted = this._isValueDefined(value);
-      }
+  addEventListener(
+    selector: string,
+    eventType: string,
+    listener: Listener<T>,
+    options?: AddEventListenerOptions
+  ): EventSubscription {
+    const elem = document.querySelector(selector);
 
-      if (this._isStarted) {
-        this._innerValue = value;
-        this._callSubscribers(event);
+    if (!elem) {
+      throw new Error(`Could not find any element with selector "${selector}"`);
+    }
+
+    const eventListener: EventListener =
+      this._createEventListenerFromListener(listener);
+
+    elem.addEventListener(eventType, eventListener, options);
+
+    return new EventSubscription(elem, eventType, eventListener);
+  }
+
+  fork(...operators: OperatorFunction<T>[]): Fleuve<T> {
+    const fork$: Fleuve<T> = new Fleuve();
+    fork$._preProcessOperations = operators;
+
+    this.subscribe((value: T) => {
+      try {
+        const nextValue = fork$._computeValue(
+          value,
+          ...fork$._preProcessOperations
+        );
+        fork$.next(nextValue);
+      } catch (err) {
+        if (!(err instanceof FilterError)) {
+          throw err;
+        }
       }
     });
+    return fork$;
+  }
+
+  next(...events: T[]): this {
+    if (!this._isStarted) {
+      this._isStarted = arguments.length > 0;
+    }
+
+    if (this._isStarted) {
+      events.forEach((event: T) => {
+        this._innerValue = event;
+        this._callSubscribers(event);
+      });
+    }
+
+    return this;
   }
 
   pipe<U = any>(...operations: OperatorFunction<T>[]): Fleuve<U> {
-    const fleuve$ = new Fleuve<any>();
-    if (this._isStarted) {
+    const fleuve$ = new Fleuve<U>();
+    if (this._isStarted && arguments.length > 0) {
       try {
         const value = this._computeValue(
           this._innerValue as T,
@@ -42,9 +78,8 @@ export class Fleuve<T = never> {
         );
         fleuve$.next(value);
       } catch (err) {
-        if (err instanceof FilterError) {
-          fleuve$._isStarted = false;
-          fleuve$.next(undefined);
+        if (!(err instanceof FilterError)) {
+          throw err;
         }
       }
     }
@@ -62,42 +97,6 @@ export class Fleuve<T = never> {
     }
   }
 
-  fork(...operators: OperatorFunction<T>[]): Fleuve<T> {
-    const fork$: Fleuve<T> = new Fleuve();
-    fork$._parent$ = this;
-    fork$._preProcessOperations = operators;
-
-    this.subscribe((value: T) => {
-      try {
-        fork$.next(fork$._computeValue(value, ...fork$._preProcessOperations));
-      } catch {}
-    });
-    return fork$;
-  }
-
-  addEventListener(
-    selector: string,
-    eventType: string,
-    listener: Listener<T>,
-    options?: AddEventListenerOptions
-  ): EventSubscription {
-    const elem = document.querySelector(selector);
-
-    if (!elem) {
-      throw new Error(`Could not find any element with selector "${selector}"`);
-    }
-
-    const eventListener: EventListener = (event: Event) => listener(this._innerValue as T, event);
-
-    elem.addEventListener(eventType, eventListener, options);
-
-    return new EventSubscription(elem, eventType, eventListener);
-  }
-
-  private _isValueDefined(value: T | undefined): value is T {
-    return value !== undefined;
-  }
-  
   private _filterNonFunctions(...fns: any[]): OperatorFunction<T>[] {
     return fns.filter((f) => this._isFunction(f));
   }
@@ -110,11 +109,19 @@ export class Fleuve<T = never> {
     this._subscribers.forEach((s) => s(event));
   }
 
-  private _computeValue(initValue: T, ...operations: OperatorFunction<T>[]) {
+  private _computeValue(initValue: T, ...operations: OperatorFunction<T>[]): any {
     if (operations.length > 0) {
       return operations
         .slice(1)
         .reduce((val, fn) => fn(val), operations[0](initValue));
+    } else {
+      return initValue;
     }
+  }
+
+  private _createEventListenerFromListener(
+    listener: Listener<T>
+  ): EventListener {
+    return (event: Event) => listener(this._innerValue as T, event);
   }
 }

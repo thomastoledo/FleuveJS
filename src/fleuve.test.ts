@@ -1,5 +1,5 @@
 import { Fleuve } from "./fleuve";
-import { EventSubscription, Subscriber } from "./models/event";
+import { EventSubscription, Listener, Subscriber } from "./models/event";
 import { filter } from "./operators/filter";
 import { map } from "./operators/map";
 
@@ -111,7 +111,7 @@ describe("Fleuve", () => {
       fleuve$.next();
       expect((fleuve$ as any)._isStarted).toEqual(false);
       fleuve$.next(undefined as any);
-      expect((fleuve$ as any)._isStarted).toEqual(false);
+      expect((fleuve$ as any)._isStarted).toEqual(true);
       fleuve$.next(12);
       expect((fleuve$ as any)._isStarted).toEqual(true);
       fleuve$.next(100, undefined as any, 12);
@@ -181,39 +181,144 @@ describe("Fleuve", () => {
       );
       expect((result2$ as any)._innerValue).toEqual(0);
     });
+
+    test('should throw an error', () => {
+      const thresholdError = new Error('Threshold error: value is > 100');
+      const fleuve$ = new Fleuve(100);
+      
+      try {
+        fleuve$.pipe(map(x => {
+          if (x < 100) {
+            return x;
+          } else {
+            throw thresholdError;
+          }
+        }));  
+        fail('The following error should have been thrown, but was not:', thresholdError);
+      } catch (err) {
+        expect(err).toEqual(thresholdError);
+      }
+
+    });
   });
 
   describe("fork", () => {
-    test("should fork into a new Fleuve with the old one as a source", () => {
-      const fleuve$ = new Fleuve<number>();
-      const subscriber = jest.fn();
-      const forked$ = fleuve$.fork(filter((x) => x > 15));
+    let fleuve$: Fleuve<number>;
+    let forked$: Fleuve<number>;
+    beforeEach(() => {
+      fleuve$ = new Fleuve<number>();
+    });
 
-      forked$.subscribe(subscriber);
-      expect(subscriber).not.toHaveBeenCalled();
-      fleuve$.next(12);
-      expect(subscriber).not.toHaveBeenCalled();
-      fleuve$.next(20);
-      expect(subscriber).toHaveBeenNthCalledWith(1, 20);
+    test("should emit no value", () => {
+      forked$ = fleuve$.fork();
+      forked$.subscribe(() => fail('No value should have been emitted'));
+
+      expect((forked$ as any)._isStarted).toEqual(false);
+      expect((forked$ as any)._innerValue).toEqual(undefined);
+
+      fleuve$.next();
+      expect((forked$ as any)._isStarted).toEqual(false);
+      expect((forked$ as any)._innerValue).toEqual(undefined);
+    });
+
+    test('should emit origin value', () => {
+      forked$ = fleuve$.fork();
+      forked$.subscribe((x) => expect(x).toEqual(100));
+      fleuve$.next(100);
+    });
+
+    test('should filter emitted values', () => {
+      forked$ = fleuve$.fork(filter((x) => x > 20));
+      forked$.subscribe((x) => x <= 20 ? fail('No value <= 20 should have been emitted') : void 0);
+      
+      fleuve$.next(10);
+      expect((forked$ as any)._isStarted).toEqual(false);
+      expect((forked$ as any)._innerValue).toEqual(undefined);
+
+      fleuve$.next(30);
+      expect((forked$ as any)._isStarted).toEqual(true);
+      expect((forked$ as any)._innerValue).toEqual(30);
+    });
+
+    test('should map emitted values', () => {
+      forked$ = fleuve$.fork(map((x) => x  * 2), map((x) => x + 5));
+      forked$.subscribe((x) => expect(x).toEqual(25));
+      fleuve$.next(10);
+    });
+
+    test('should throw an error', () => {
+      const thresholdError = new Error('Threshold error: value is > 100');
+      forked$ = fleuve$.fork(map(x => {
+        if (x < 100) {
+          return x;
+        } else {
+          throw thresholdError;
+        }
+      }));
+
+      try {
+        fleuve$.next(100);
+        fail('The following error should have been thrown, but was not:', thresholdError);
+      } catch (err) {
+        expect(err).toEqual(thresholdError);
+      }
+
     });
   });
 
   describe("addEventListener", () => {
-    let querySelectorSpy: jest.SpyInstance;
-    let addEventListenerSpy: jest.SpyInstance;
-    let elem: Element;
-    beforeEach(() => {
-      addEventListenerSpy = jest.fn();
-      elem = { addEventListener: addEventListenerSpy } as any;
-      querySelectorSpy = jest
-        .spyOn(document, "querySelector")
-        .mockReturnValue(elem);
+    test('should throw an error', () => {
+      const querySelectorSpy = jest.spyOn(document, 'querySelector').mockReturnValue(null);
+      try {
+        const fleuve$ = new Fleuve();
+        fleuve$.addEventListener('', '', () => {});
+        fail('An error should have been thrown, but is was not');
+      } catch (err) {
+        expect(err).toEqual(new Error(`Could not find any element with selector ""`));
+      }
     });
 
-    test("should return a new EventSubscription", () => {
+    test('should call element.addEventListener', () => {
+      const dummyAddEventListener = jest.fn();
+      const dummyElem: Element = {addEventListener: dummyAddEventListener} as any;
+      jest.spyOn(document, 'querySelector').mockReturnValue(dummyElem);
       const fleuve$ = new Fleuve();
-      const subscription = fleuve$.addEventListener('', '', () => {});
-      expect(subscription).toEqual(new EventSubscription(elem, '', (event: Event) => () => {}));
+      fleuve$.addEventListener('test', 'click', () => {});
+      expect(dummyAddEventListener).toHaveBeenCalledWith('click', expect.any(Function), undefined);
+    });
+
+    test('should call fleuve._createEventListenerFromListener', () => {
+      jest.spyOn(document, 'querySelector').mockReturnValue({addEventListener: jest.fn()} as any);
+      const fleuve$ = new Fleuve();
+      const _createEventListenerFromListenerSpy = jest.spyOn((fleuve$ as any), '_createEventListenerFromListener');
+      const listener: Listener = jest.fn();
+      fleuve$.addEventListener('test', 'click', listener);
+      expect(_createEventListenerFromListenerSpy).toHaveBeenCalledWith(listener);
+    });
+
+    test('should return an event subscription', () => {
+      const dummyAddEventListener = jest.fn();
+      const dummyRemoveEventListener = jest.fn();
+      const dummyElem: Element = {addEventListener: dummyAddEventListener, removeEventListener: dummyRemoveEventListener} as any;
+      const dummyListener = jest.fn();
+      jest.spyOn(document, 'querySelector').mockReturnValue(dummyElem);
+      const fleuve$ = new Fleuve();
+      const eventSubscription = fleuve$.addEventListener('test', 'click', dummyListener);
+      expect(eventSubscription).toBeInstanceOf(EventSubscription);
+      
+      eventSubscription.unsubscribe();
+      expect(dummyRemoveEventListener).toHaveBeenNthCalledWith(1, 'click', expect.any(Function));
+    });
+  });
+
+  describe('_createEventListenerFromListener', () => {
+    test('should return an eventListener', () =>{
+      const fleuve$ = new Fleuve();
+      const listener = jest.fn();
+      const eventListener = (fleuve$ as any)._createEventListenerFromListener(listener);
+      expect(eventListener).toBeTruthy();
+      eventListener();
+      expect(listener).toHaveBeenCalledTimes(1);
     });
   });
 });

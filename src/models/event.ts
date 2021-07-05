@@ -13,6 +13,6 @@ export class EventSubscription {
   };
 }
 
-export interface Listener<T> {
+export interface Listener<T = never> {
   (source: T, event: Event): any;
 }
