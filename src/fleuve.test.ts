@@ -1,5 +1,6 @@
 import { Fleuve } from "./fleuve";
 import { EventSubscription, Listener, Subscriber } from "./models/event";
+import { Operator, OperatorFunction } from "./models/operator";
 import { filter } from "./operators/filter";
 import { map } from "./operators/map";
 
@@ -138,11 +139,11 @@ describe("Fleuve", () => {
       expect(Number.isNaN((pipedFleuve$ as any)._innerValue)).toEqual(true);
     });
 
-    test("should return a new Fleuve with an undefined value and not started", () => {
+    test("should return a new Fleuve with the original Fleuve's value and started", () => {
       const fleuve$ = new Fleuve(12);
       const pipedFleuve$ = fleuve$.pipe();
-      expect((pipedFleuve$ as any)._innerValue).toEqual(undefined);
-      expect((pipedFleuve$ as any)._isStarted).toEqual(false);
+      expect((pipedFleuve$ as any)._innerValue).toEqual(12);
+      expect((pipedFleuve$ as any)._isStarted).toEqual(true);
     });
 
     test("should return a Fleuve(6)", () => {
@@ -334,6 +335,59 @@ describe("Fleuve", () => {
       fork3$.subscribe(() => fail('fork1$ should have been damed'));
       fleuve$.subscribe((x) => expect(x).toEqual(12));
       fleuve$.next(12);
+    });
+
+    test('should not accept any new values but should still have the original value', () => {
+      const fleuve$ = new Fleuve(12);
+      const fork1$ = fleuve$.fork(map(x => x * 2));
+      const fork2$ = fork1$.fork(filter(x => x < 100));
+      
+      fleuve$.dam();
+      fork1$.subscribe(x => expect(x).toEqual(24));
+      fork2$.subscribe(x => expect(x).toEqual(24));
+      
+      fleuve$.next(99);
+    });
+  });
+
+  describe('pile', () => {
+    test('should execute each function and set a new value', () => {
+      const operations: OperatorFunction<number>[] = [jest.fn(), jest.fn(), jest.fn()];
+      const fleuve$ = new Fleuve<number>();
+      fleuve$.pile(...operations);
+      operations.forEach(operator => expect(operator).toHaveBeenCalled());
+    });
+
+    test('should update the _innerValue', () => {
+      const operations: OperatorFunction<number>[] = [(x) => x * 2, (y) => y + 5, (z) => z / 5, filter((x) => x > 0)];
+      const fleuve$ = new Fleuve<number>(5);
+      fleuve$.pile(...operations);
+      fleuve$.subscribe((x) => expect(x).toEqual(3));
+    });
+
+    test('should not update the _innerValue', () => {
+      const operations: OperatorFunction<number>[] = [(x) => x * 2, (y) => y + 5, (z) => z / 5, filter((x) => x > 100)];
+      const fleuve$ = new Fleuve<number>(5);
+      fleuve$.pile(...operations);
+      fleuve$.subscribe((x) => expect(x).toEqual(5));
+    });
+
+    test('should throw an error', () => {
+      const thresholdError = new Error('Threshold error: value is > 100');
+      const fleuve$ = new Fleuve(100);
+      
+      try {
+        fleuve$.pile(map(x => {
+          if (x < 100) {
+            return x;
+          } else {
+            throw thresholdError;
+          }
+        }));  
+        fail('The following error should have been thrown, but was not:', thresholdError);
+      } catch (err) {
+        expect(err).toEqual(thresholdError);
+      }
     });
   });
 });
