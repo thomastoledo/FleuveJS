@@ -1,21 +1,24 @@
-import { IFleuve } from "./models";
-import { NextCallback, Subscriber, Listener, EventSubscription } from "./models/event";
+import { Subscriber, Listener, EventSubscription } from "./models/event";
 import { OperatorFunction } from "./models/operator";
-export declare class Fleuve<T = any> implements IFleuve {
-    private _innerSource?;
-    private readonly subscribers;
-    private _parent$?;
+export declare class Fleuve<T = never> {
+    private _innerValue?;
+    private readonly _subscribers;
     private _preProcessOperations;
-    private _isError;
-    constructor(_innerSource?: T | undefined);
-    next(...events: T[] | NextCallback<T>[]): void;
-    subscribe(subscriber: Subscriber<T | undefined>): void;
-    pipe(...operations: OperatorFunction<T>[]): Fleuve<any>;
-    fork(...operators: OperatorFunction<T>[]): IFleuve;
-    addEventListener(selector: string, eventType: string, listener: Listener<T | undefined>, options: AddEventListenerOptions): EventSubscription;
+    private _isStarted;
+    private _isComplete;
+    private _forks$;
+    constructor(_innerValue?: T | undefined);
+    addEventListener(selector: string, eventType: string, listener: Listener<T>, options?: AddEventListenerOptions): EventSubscription;
+    dam(): void;
+    fork(...operators: OperatorFunction<T>[]): Fleuve<T>;
+    next(...events: T[]): this;
+    pile(...operations: OperatorFunction<T>[]): this;
+    pipe<U = any>(...operations: OperatorFunction<T>[]): Fleuve<U>;
+    subscribe(subscriber: Subscriber<T>): void;
     private _filterNonFunctions;
     private _isFunction;
-    private _isOnlyFunctionsOrOnlyScalars;
-    private _nextEvent;
+    private _callSubscribers;
     private _computeValue;
+    private _createEventListenerFromListener;
+    private _complete;
 }

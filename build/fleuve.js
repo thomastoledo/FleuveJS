@@ -1,63 +1,98 @@
-import { EventSubscription, } from "./models/event";
+import { FilterError } from "./models/errors";
+import { EventSubscription } from "./models/event";
 export class Fleuve {
-    _innerSource;
-    subscribers = [];
-    _parent$;
+    _innerValue;
+    _subscribers = [];
     _preProcessOperations = [];
-    _isError = false;
-    constructor(_innerSource) {
-        this._innerSource = _innerSource;
-    }
-    next(...events) {
-        this._isOnlyFunctionsOrOnlyScalars(events);
-        events.forEach((event) => {
-            try {
-                this._innerSource = this._preProcessOperations.reduce((val, f) => f(val), this._nextEvent(event));
-                this._isError = false;
-                this.subscribers.forEach((f) => f(this._innerSource));
-            }
-            catch {
-                this._isError = true;
-            }
-        });
-    }
-    subscribe(subscriber) {
-        if (!this._isFunction(subscriber)) {
-            throw new Error("Please provide a function");
-        }
-        this.subscribers.push(subscriber);
-        if (!this._isError) {
-            subscriber(this._innerSource);
-        }
-    }
-    pipe(...operations) {
-        const fleuve$ = new Fleuve();
-        try {
-            const value = this._computeValue(...this._filterNonFunctions(...operations));
-            fleuve$.next(value);
-        }
-        catch {
-            fleuve$._isError = true;
-        }
-        return fleuve$;
-    }
-    fork(...operators) {
-        const fork$ = new Fleuve();
-        fork$._parent$ = this;
-        fork$._preProcessOperations = operators;
-        this.subscribe((value) => {
-            fork$.next(value);
-        });
-        return fork$;
+    _isStarted = false;
+    _isComplete = false;
+    _forks$ = [];
+    constructor(_innerValue) {
+        this._innerValue = _innerValue;
+        this._isStarted = arguments.length > 0;
     }
     addEventListener(selector, eventType, listener, options) {
         const elem = document.querySelector(selector);
         if (!elem) {
             throw new Error(`Could not find any element with selector "${selector}"`);
         }
-        const eventListener = (event) => listener(this._innerSource, event);
+        const eventListener = this._createEventListenerFromListener(listener);
         elem.addEventListener(eventType, eventListener, options);
         return new EventSubscription(elem, eventType, eventListener);
+    }
+    dam() {
+        // TODO - TTO: rajouter un onError et un onComplete sur les subscribers pour pouvoir tous les exécuter
+        this._forks$.forEach((fork$) => {
+            fork$.dam();
+            fork$._complete();
+        });
+    }
+    fork(...operators) {
+        const fork$ = new Fleuve();
+        fork$._preProcessOperations = operators;
+        this.subscribe((value) => {
+            try {
+                const nextValue = fork$._computeValue(value, ...fork$._preProcessOperations);
+                fork$.next(nextValue);
+            }
+            catch (err) {
+                if (!(err instanceof FilterError)) {
+                    throw err;
+                }
+            }
+        });
+        this._forks$.push(fork$);
+        return fork$;
+    }
+    next(...events) {
+        if (!this._isComplete) {
+            if (!this._isStarted) {
+                this._isStarted = arguments.length > 0;
+            }
+            if (this._isStarted) {
+                events.forEach((event) => {
+                    this._innerValue = event;
+                    this._callSubscribers(event);
+                });
+            }
+        }
+        return this;
+    }
+    pile(...operations) {
+        try {
+            const value = this._computeValue(this._innerValue, ...this._filterNonFunctions(...operations));
+            this.next(value);
+        }
+        catch (err) {
+            if (!(err instanceof FilterError)) {
+                throw err;
+            }
+        }
+        return this;
+    }
+    pipe(...operations) {
+        const fleuve$ = new Fleuve();
+        if (this._isStarted) {
+            try {
+                const value = this._computeValue(this._innerValue, ...this._filterNonFunctions(...operations));
+                fleuve$.next(value);
+            }
+            catch (err) {
+                if (!(err instanceof FilterError)) {
+                    throw err;
+                }
+            }
+        }
+        return fleuve$;
+    }
+    subscribe(subscriber) {
+        if (!this._isFunction(subscriber)) {
+            throw new Error("Please provide a function");
+        }
+        this._subscribers.push(subscriber);
+        if (this._isStarted) {
+            subscriber(this._innerValue);
+        }
     }
     _filterNonFunctions(...fns) {
         return fns.filter((f) => this._isFunction(f));
@@ -65,28 +100,23 @@ export class Fleuve {
     _isFunction(fn) {
         return typeof fn === "function";
     }
-    _isOnlyFunctionsOrOnlyScalars(events) {
-        const onlyFunctions = events.every((event) => this._isFunction(event));
-        const onlyScalar = events.every((event) => !this._isFunction(event));
-        if (!onlyFunctions && !onlyScalar) {
-            throw new Error("Please provide either only scalar values or only functions");
-        }
+    _callSubscribers(event) {
+        this._subscribers.forEach((s) => s(event));
     }
-    _nextEvent(event) {
-        let res;
-        if (this._isFunction(event)) {
-            res = event(this._innerSource);
-        }
-        else {
-            res = event;
-        }
-        return res;
-    }
-    _computeValue(...operations) {
+    _computeValue(initValue, ...operations) {
         if (operations.length > 0) {
             return operations
                 .slice(1)
-                .reduce((val, fn) => fn(val), operations[0](this._innerSource));
+                .reduce((val, fn) => fn(val), operations[0](initValue));
         }
+        else {
+            return initValue;
+        }
+    }
+    _createEventListenerFromListener(listener) {
+        return (event) => listener(this._innerValue, event);
+    }
+    _complete() {
+        this._isComplete = true;
     }
 }
