@@ -1,6 +1,6 @@
 import { FilterError } from "./models/errors";
 import { Subscriber, Listener, EventSubscription } from "./models/event";
-import { OperatorFunction } from "./models/operator";
+import { Operator, OperatorFunction } from "./models/operator";
 
 export class Fleuve<T = never> {
   private readonly _subscribers: Subscriber<T>[] = [];
@@ -84,9 +84,24 @@ export class Fleuve<T = never> {
     return this;
   }
 
+  pile(...operations: OperatorFunction<T>[]): this {
+    try {
+      const value = this._computeValue(
+        this._innerValue as T,
+        ...this._filterNonFunctions(...operations)
+      );
+      this.next(value);
+    } catch (err) {
+      if (!(err instanceof FilterError)) {
+        throw err;
+      }
+    }
+    return this;
+  }
+
   pipe<U = any>(...operations: OperatorFunction<T>[]): Fleuve<U> {
     const fleuve$ = new Fleuve<U>();
-    if (this._isStarted && arguments.length > 0) {
+    if (this._isStarted) {
       try {
         const value = this._computeValue(
           this._innerValue as T,
