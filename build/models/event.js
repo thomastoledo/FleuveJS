@@ -1,13 +1,17 @@
-export class EventSubscription {
-    elem;
-    eventType;
-    listener;
-    constructor(elem, eventType, listener) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.EventSubscription = void 0;
+var EventSubscription = /** @class */ (function () {
+    function EventSubscription(elem, eventType, listener) {
+        var _this = this;
         this.elem = elem;
         this.eventType = eventType;
         this.listener = listener;
+        this.unsubscribe = function () {
+            var _a;
+            (_a = _this.elem) === null || _a === void 0 ? void 0 : _a.removeEventListener(_this.eventType, _this.listener);
+        };
     }
-    unsubscribe = () => {
-        this.elem?.removeEventListener(this.eventType, this.listener);
-    };
-}
+    return EventSubscription;
+}());
+exports.EventSubscription = EventSubscription;
