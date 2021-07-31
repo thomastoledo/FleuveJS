@@ -1,7 +1,3 @@
-export interface Subscriber<T = any> {
-  (value: T): void;
-}
-
 export class EventSubscription {
   constructor(
     private elem: Element,
@@ -9,7 +5,7 @@ export class EventSubscription {
     private listener: EventListener
   ) {}
   unsubscribe = () => {
-    this.elem?.removeEventListener(this.eventType, this.listener);
+    this.elem.removeEventListener(this.eventType, this.listener);
   };
 }
 

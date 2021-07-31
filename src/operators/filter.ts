@@ -1,12 +1,18 @@
 
 import { FilterError } from "../models/errors";
-import { OperatorCallback, OperatorFunction } from "../models/operator";
+import { OperatorFunction } from "../models/operator";
 
-export const filter = function<T = any>(f: OperatorCallback<T, boolean>): OperatorFunction<T> {
+export const filter = function<T = any>(f: OperatorFunction<T, boolean>): OperatorFunction<T, Promise<T>> {
     return (source) => {
-        if (f(source)) {
-            return source;
-        }
-        throw new FilterError();
+        return new Promise((resolve, reject) => {
+            try {
+                if (!f(source)) {
+                    throw new FilterError();
+                }
+                resolve(source);
+            } catch (error) {
+                reject(error);
+            }
+        });
     }
 }

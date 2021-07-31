@@ -1,7 +1,13 @@
-import { Operator, OperatorCallback, OperatorFunction } from "../models/operator";
+import { OperatorFunction } from "../models/operator";
 
-export const map = function<T = any, U = T>(f: OperatorCallback<T, U>): OperatorFunction<T, U> {
+export const map = function<T = any, U = T>(f: OperatorFunction<T, U>): OperatorFunction<T, Promise<U>> {
     return (source) => {
-        return f(source);
+        return new Promise<U>((resolve, reject) => {
+            try {
+                resolve(f(source));
+            } catch (error) {
+                reject(error);
+            }
+        });
     }
 }

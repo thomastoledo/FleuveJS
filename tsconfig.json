@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "strict": true,
-        "target": "esnext",
+        "target": "ES5",
         "declaration": true,
         "outDir": "build",
         "rootDir": "src",
