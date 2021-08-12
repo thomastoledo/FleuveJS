@@ -1,4 +1,4 @@
-import { Fleuve } from "../fleuve";
+import { Fleuve } from "../fleuve/fleuve";
 import { OperatorFunction } from "../models/operator";
 
 export function switchMap<T = any, U = T>(f: OperatorFunction<T, Fleuve<U>>): OperatorFunction<T, Promise<U>> {

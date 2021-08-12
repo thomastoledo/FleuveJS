@@ -1,10 +1,10 @@
 import { Fleuve } from "./fleuve";
-import { EventSubscription, Listener } from "./models/event";
-import { Operator, OperatorFunction } from "./models/operator";
-import { Subscriber } from "./models/subscription";
-import { filter } from "./operators/filter";
-import { map } from "./operators/map";
-import { switchMap } from "./operators/switch-map";
+import { EventSubscription, Listener } from "../models/event";
+import { Operator, OperatorFunction } from "../models/operator";
+import { OnNext, Subscriber } from "../models/subscription";
+import { filter } from "../operators/filter";
+import { map } from "../operators/map";
+import { switchMap } from "../operators/switch-map";
 
 describe("Fleuve", () => {
   function fail(message: string = "", ...args: any[]) {
@@ -69,6 +69,16 @@ describe("Fleuve", () => {
       expect((fleuve$ as any)._isStarted).toEqual(true);
       fleuve$.next(undefined as any);
       expect((subscriber as any)._onNext).toHaveBeenNthCalledWith(2, undefined);
+    });
+
+    it("should execute onNext", () => {
+      const onNext: OnNext<number> = jest.fn();
+      const fleuve$ = new Fleuve<number>(12);
+      fleuve$.subscribe(onNext);
+      expect(onNext).toHaveBeenNthCalledWith(1, 12);
+      expect((fleuve$ as any)._isStarted).toEqual(true);
+      fleuve$.next(undefined as any);
+      expect(onNext).toHaveBeenNthCalledWith(2, undefined);
     });
   });
 
@@ -357,6 +367,18 @@ describe("Fleuve", () => {
       eventListener();
       expect(listener).toHaveBeenCalledTimes(1);
     });
+
+    it("should return an eventListener but never call it", () => {
+      const fleuve$ = new Fleuve();
+      (fleuve$ as any)._error = new Error('');
+      const listener = jest.fn();
+      const eventListener = (fleuve$ as any)._createEventListenerFromListener(
+        listener
+      );
+      expect(eventListener).toBeTruthy();
+      eventListener();
+      expect(listener).not.toHaveBeenCalled();
+    });
   });
 
   describe("dam", () => {
@@ -406,11 +428,11 @@ describe("Fleuve", () => {
         filter((x) => x > 0),
       ];
       const fleuve$ = new Fleuve<number>(5);
-      fleuve$.pile(...operations);
+      fleuve$.compile(...operations);
       fleuve$.subscribe((x: number) => expect(x).toEqual(3));
     });
 
-    it("should not update the _innerValue", () => {
+    it("should not update the _innerValue if a filter predicate is not matched", () => {
       const operations: OperatorFunction<number>[] = [
         (x) => x * 2,
         (y) => y + 5,
@@ -418,7 +440,33 @@ describe("Fleuve", () => {
         filter((x) => x > 100),
       ];
       const fleuve$ = new Fleuve<number>(5);
-      fleuve$.pile(...operations);
+      fleuve$.compile(...operations);
+      fleuve$.subscribe((x) => expect(x).toEqual(5));
+    });
+
+    it('should not update the _innerValue if the fleuve is in error', () => {
+      const fleuve$ = new Fleuve<number>(5);
+      (fleuve$ as any)._error = new Error('');
+      const operations: OperatorFunction<number>[] = [
+        (x) => x * 2,
+        (y) => y + 5,
+        (z) => z / 5,
+        filter((x) => x > 100),
+      ];
+      fleuve$.compile(...operations);
+      fleuve$.subscribe((x) => expect(x).toEqual(5));
+    });
+
+    it('should not update the _innerValue if the fleuve is complete', () => {
+      const fleuve$ = new Fleuve<number>(5);
+      (fleuve$ as any)._complete();
+      const operations: OperatorFunction<number>[] = [
+        (x) => x * 2,
+        (y) => y + 5,
+        (z) => z / 5,
+        filter((x) => x > 100),
+      ];
+      fleuve$.compile(...operations);
       fleuve$.subscribe((x) => expect(x).toEqual(5));
     });
 
@@ -435,63 +483,6 @@ describe("Fleuve", () => {
             }
           })
         ).subscribe(jest.fn(), (err) => expect(err).toEqual(thresholdError));
-    });
-  });
-
-  describe("compile", () => {
-    it("should execute each function and set a new value", () => {
-      const operations: OperatorFunction<number>[] = [
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
-      ];
-      const fleuve$ = new Fleuve<number>();
-      fleuve$.compile(...operations);
-      fleuve$.subscribe(() => operations.forEach((operator) => expect(operator).toHaveBeenCalled()));
-    });
-
-    it("should update the _innerValue", () => {
-      const operations: OperatorFunction<number>[] = [
-        (x) => x * 2,
-        (y) => y + 5,
-        (z) => z / 5,
-        filter((x) => x > 0),
-      ];
-      const fleuve$ = new Fleuve<number>(5);
-      fleuve$.compile(...operations);
-      fleuve$.subscribe((x: number) => expect(x).toEqual(3));
-    });
-
-    it("should not update the _innerValue", () => {
-      const operations: OperatorFunction<number>[] = [
-        (x) => x * 2,
-        (y) => y + 5,
-        (z) => z / 5,
-        filter((x) => x > 100),
-      ];
-      const fleuve$ = new Fleuve<number>(5);
-      fleuve$.compile(...operations);
-      fleuve$.subscribe((x: number) => expect(x).toEqual(5));
-    });
-
-    it("should throw an thresholdError", () => {
-      const thresholdError = new Error("Threshold error: value is > 100");
-      const fleuve$ = new Fleuve(100);
-      fleuve$.compile(
-        map((x) => {
-          if (x < 100) {
-            return x;
-          } else {
-            throw thresholdError;
-          }
-        })
-      );
-      fleuve$.subscribe(
-        Subscriber.of(
-          (value) => expect(value).toEqual(100),
-          (err) => expect(err).toEqual(thresholdError)
-        )
-      );
     });
   });
 });

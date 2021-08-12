@@ -1,14 +1,14 @@
-import { filterNonFunctions, isFunction } from "./helpers/function.helper";
-import { FilterError } from "./models/errors";
-import { Listener, EventSubscription } from "./models/event";
-import { OperatorFunction } from "./models/operator";
+import { filterNonFunctions, isFunction } from "../helpers/function.helper";
+import { FilterError } from "../models/errors";
+import { Listener, EventSubscription } from "../models/event";
+import { OperatorFunction } from "../models/operator";
 import {
   OnComplete,
   OnError,
   OnNext,
   Subscriber,
   Subscription,
-} from "./models/subscription";
+} from "../models/subscription";
 
 export class Fleuve<T = never> {
   private _subscribers: Subscriber<T>[] = [];
@@ -48,12 +48,19 @@ export class Fleuve<T = never> {
     return new EventSubscription(elem, eventType, eventListener);
   }
 
+  /**
+   * @deprecated use the close() method
+   */
   dam(): void {
     this._forks$.forEach((fork$) => {
-      fork$.dam();
+      fork$.close();
       fork$._complete();
       fork$._nextComplete();
     });
+  }
+
+  close(): void {
+    this.dam();
   }
 
   fork(...operators: OperatorFunction<T>[]): Fleuve<T> {
@@ -148,8 +155,7 @@ export class Fleuve<T = never> {
     }
 
     let subscriber: Subscriber<T> =
-      this._createSubscriber(onNext, onError, onComplete) ??
-      (onNext as Subscriber<T>);
+      this._createSubscriber(onNext, onError, onComplete);
 
     this._doNext(subscriber);
     this._doError(subscriber);
@@ -175,7 +181,7 @@ export class Fleuve<T = never> {
     onNext: OnNext<T> | Subscriber<any>,
     onError?: OnError,
     onComplete?: OnComplete<T>
-  ): Subscriber<T> | undefined {
+  ): Subscriber<T> {
     if (isFunction(onNext)) {
       return Subscriber.of(
         (value: T) => {
@@ -196,7 +202,6 @@ export class Fleuve<T = never> {
 
   private _doError(subscriber: Subscriber<T>) {
     if (!this._isComplete && !!this._error) {
-      console.log('SALUT')
       subscriber.onError(this._error);
     }
   }

@@ -18,14 +18,14 @@ export class Subscriber<T = any> {
     }
   
     static of<T>(onNext: OnNext<T>, onError?: OnError, onComplete?: OnComplete<T>): Subscriber<T> {
+      if (!isFunction(onNext) || (!!onError && !isFunction(onError)) || (!!onComplete && !isFunction(onComplete))) {
+        throw new Error(`Please provide functions for onNext, onError and onComplete`);
+      }
       return new Subscriber<T>(onNext, onError, onComplete);
     }
   
     private constructor(
       private _onNext: OnNext<T>, private _onError?: OnError, private _onComplete?: OnComplete<T>) {
-        if (!isFunction(this.onNext) || !isFunction(this.onError) || !isFunction(this.onComplete)) {
-          throw new Error(`Please provide functions for onNext, onError and onComplete`);
-        }
     }
   
     public onNext(t: T) {
