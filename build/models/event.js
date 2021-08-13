@@ -8,8 +8,7 @@ var EventSubscription = /** @class */ (function () {
         this.eventType = eventType;
         this.listener = listener;
         this.unsubscribe = function () {
-            var _a;
-            (_a = _this.elem) === null || _a === void 0 ? void 0 : _a.removeEventListener(_this.eventType, _this.listener);
+            _this.elem.removeEventListener(_this.eventType, _this.listener);
         };
     }
     return EventSubscription;

@@ -1,6 +1,6 @@
 {
   "name": "fleuvejs",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "description": "A simple JavaScript Observable Library",
   "main": "build/index.js",
   "scripts": {

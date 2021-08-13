@@ -1,6 +1,3 @@
-export interface Subscriber<T = any> {
-    (value: T): void;
-}
 export declare class EventSubscription {
     private elem;
     private eventType;

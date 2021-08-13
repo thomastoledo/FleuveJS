@@ -381,16 +381,16 @@ describe("Fleuve", () => {
     });
   });
 
-  describe("dam", () => {
+  describe("close", () => {
     it("should stop forked Fleuves", () => {
       const fleuve$ = new Fleuve<number>();
       const fork1$ = fleuve$.fork();
       const fork2$ = fleuve$.fork();
       const fork3$ = fork2$.fork();
-      fleuve$.dam();
-      fork1$.subscribe(() => fail("fork1$ should have been damed"));
-      fork2$.subscribe(() => fail("fork1$ should have been damed"));
-      fork3$.subscribe(() => fail("fork1$ should have been damed"));
+      fleuve$.close();
+      fork1$.subscribe(() => fail("fork1$ should have been closed"));
+      fork2$.subscribe(() => fail("fork1$ should have been closed"));
+      fork3$.subscribe(() => fail("fork1$ should have been closed"));
       fleuve$.subscribe((x) => expect(x).toEqual(12));
       fleuve$.next(12);
     });
@@ -400,7 +400,7 @@ describe("Fleuve", () => {
       const fork1$ = fleuve$.fork(map((x) => x * 2));
       const fork2$ = fork1$.fork(filter((x) => x < 100));
 
-      fleuve$.dam();
+      fleuve$.close();
       fork1$.subscribe((x) => expect(x).toEqual(24));
       fork2$.subscribe((x) => expect(x).toEqual(24));
 

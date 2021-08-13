@@ -19,11 +19,11 @@ const johnDoe$ = new Fleuve({firstname: 'john', lastname: 'doe'});
 const counter$ = new Fleuve(0);
 ```
 
-### Provide new values with `next` and `pile`
+### Provide new values with `next` and `compile`
 ```ts
 const fleuve$ = new Fleuve(0);
 fleuve$.next(12, 13, 14, 15, 16); // fleuve$ inner value will go from 12 to 16
-fleuve$.pile((x) => x + 1, (x) => x * 2); // fleuve$ inner value will go from 16 to 17, then from 17 to 34
+fleuve$.compile((x) => x + 1, (x) => x * 2); // fleuve$ inner value will go from 16 to 17, then from 17 to 34
 ```
 
 ### Pipe the Fleuve
@@ -83,7 +83,7 @@ forked$.subscribe(x => console.log(x)); // nothing would happen at first
 fleuve$.next(20); // now, 20 would be printed in the browser's console
 ```
 
-### You can stop a Fleuve's forks with the `dam` method
+### You can stop a Fleuve's forks with the `close` method
 No more values will be allowed and the forks will be flagged as complete.
 
 ```ts
@@ -91,7 +91,7 @@ const fleuve$ = new Fleuve(12);
 const fork1$ = fleuve$.fork(map(x => x * 2));
 const fork2$ = fork1$.fork(filter(x => x < 100));
 
-fleuve$.dam();
+fleuve$.close();
 fork1$.subscribe(x => console.log('fork1$ value', x)); // will display "24"
 fork2$.subscribe(x => console.log('fork2$ value', x)); // will display "24"
 
@@ -99,9 +99,70 @@ fleuve$.next(99); // the forks' subscribers won't be triggered
 ```
 
 ## Next Features
-### More Operators
-### onError and onComplete
-### Subscriptions
-### Allow to remove a dam?
+### Refactoring incoming
+In the next release, some methods might be moved as static operators. Stay tuned!
+
+### Next operators
+#### For pipe / fork / compile
+- until
+- while
+- nth
+- take
+- first
+
+#### Static
+##### Functions
+- around
+- before
+- after
+- whenThrowing
+
+Example:
+```js
+function divide(x, y) {
+    if (y === 0) {
+        throw new Error('Invalid Denominator');
+    }
+    console.log(`x / y = ${x/y}`)
+    return x / y;
+}
+
+const aroundDivide$ = around(divide);
+const beforeDivide$ = before(divide);
+const afterDivide$ = after(divide);
+const whenThrowing = whenThrowing(divide);
+
+aroundDivide$.subscribe((x) => console.log('Around division:', x));
+beforeDivide$.subscribe(() => console.log('Before division'));
+afterDivide$.subscribe((x) => console.log('After division:', x));
+whenThrowing$.subscribe((err) => console.log('Throwing division:', err));
+
+// Should display 'Around division: undefined', 'x / y = 2', 'Around division: 2'
+aroundDivide$(10, 5);
+
+// Should display 'Before division', 'x / y = 2'
+beforeDivide$(10, 5);
+
+// Should display 'x / y = 2', 'After division: 2'
+afterDivide$(10, 5);
+
+// Should display 'Throwing: Error: Invalid Denominator'
+whenThrowing$(10, 0);
+```
+
+##### Creation
+- of
+- from
+
+##### Predicates
+- filter
+- until
+- while
+
+##### Asynchronous
+- websocket
+- promise
+
+### Allow to work with IndexedDB
 ### Allow to work with Promises
 ### Allow to work with RxJs Observables
