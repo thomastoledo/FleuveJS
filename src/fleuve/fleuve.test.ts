@@ -2,9 +2,9 @@ import { Fleuve } from "./fleuve";
 import { EventSubscription, Listener } from "../models/event";
 import { Operator, OperatorFunction } from "../models/operator";
 import { OnNext, Subscriber } from "../models/subscription";
-import { filter } from "../operators/filter";
-import { map } from "../operators/map";
-import { switchMap } from "../operators/switch-map";
+import { filter } from "../operators/predicates/filter";
+import { map } from "../operators/transform/map";
+import { switchMap } from "../operators/transform/switch-map";
 
 describe("Fleuve", () => {
   function fail(message: string = "", ...args: any[]) {
@@ -136,7 +136,7 @@ describe("Fleuve", () => {
   describe("pipe", () => {
     it("should return a new Fleuve with no value", () => {
       const fleuve$ = new Fleuve<number>();
-      const pipedFleuve$ = fleuve$.pipe(map((value) => value * 2));
+      const pipedFleuve$ = fleuve$.pipe(map((value: number) => value * 2));
       expect((pipedFleuve$ as any)._isStarted).toEqual(false);
       expect((pipedFleuve$ as any)._innerValue).toEqual(undefined);
       pipedFleuve$.subscribe(() => {
@@ -147,7 +147,7 @@ describe("Fleuve", () => {
     it("should return a new Fleuve with NaN", () => {
       const fleuve$ = new Fleuve(12);
       fleuve$.next(undefined as any);
-      const pipedFleuve$ = fleuve$.pipe(map((x) => x * 2));
+      const pipedFleuve$ = fleuve$.pipe(map((x: number) => x * 2));
       pipedFleuve$.subscribe((value) => {
         expect((pipedFleuve$ as any)._isStarted).toEqual(true);
         expect(Number.isNaN(value)).toEqual(true);
@@ -166,19 +166,19 @@ describe("Fleuve", () => {
 
     it("should return a Fleuve(6)", () => {
       const fleuve$ = new Fleuve(12);
-      const mappedFleuve$ = fleuve$.pipe(map((value) => value / 2));
+      const mappedFleuve$ = fleuve$.pipe(map((value: number) => value / 2));
       mappedFleuve$.subscribe((value) => expect(value).toEqual(6));
     });
 
     it("should return a Fleuve(12)", () => {
       const fleuve$ = new Fleuve(12);
-      const filteredFleuve$ = fleuve$.pipe(filter((value) => value > 10));
+      const filteredFleuve$ = fleuve$.pipe(filter((value: number) => value > 10));
       filteredFleuve$.subscribe((value) => expect(value).toEqual(12));
     });
 
     it("should return a filtered Fleuve with no value", () => {
       const fleuve$ = new Fleuve(12);
-      const filteredFleuve$ = fleuve$.pipe(filter((value) => value < 10));
+      const filteredFleuve$ = fleuve$.pipe(filter((value: number) => value < 10));
       expect((filteredFleuve$ as any)._isStarted).toEqual(false);
       expect((filteredFleuve$ as any)._innerValue).toEqual(undefined);
       filteredFleuve$.subscribe(() => {
@@ -189,22 +189,22 @@ describe("Fleuve", () => {
     it('should return a Fleuve("FILTERED") and then a Fleuve(0)', () => {
       const fleuve$ = new Fleuve("FIL");
       const result$ = fleuve$.pipe(
-        map((str) => str + "TERED"),
-        filter((str) => !!str)
+        map((str: string) => str + "TERED"),
+        filter((str: any) => !!str)
       );
 
       result$.subscribe((value) => expect(value).toEqual("FILTERED"));
 
       const result2$ = new Fleuve(1).pipe(
-        map((x) => x - 1),
-        filter((x) => x >= 0)
+        map((x: number) => x - 1),
+        filter((x: number) => x >= 0)
       );
       result2$.subscribe((value) => expect(value).toEqual(0));
     });
 
     it("should return a new Fleuve", () => {
       const fleuve$ = new Fleuve(12);
-      const pipedFleuve$ = fleuve$.pipe(switchMap((x) => new Fleuve(x * 2)));
+      const pipedFleuve$ = fleuve$.pipe(switchMap((x: number) => new Fleuve(x * 2)));
       pipedFleuve$.subscribe((value) => expect(value).toEqual(24));
     });
 
@@ -213,7 +213,7 @@ describe("Fleuve", () => {
       const fleuve$ = new Fleuve(100);
       expect.assertions(1);
         fleuve$.pipe(
-          map((x) => {
+          map((x: number) => {
             if (x < 100) {
               return x;
             } else {
@@ -250,7 +250,7 @@ describe("Fleuve", () => {
     });
 
     it("should filter emitted values", () => {
-      forked$ = fleuve$.fork(filter((x) => x > 20));
+      forked$ = fleuve$.fork(filter((x: number) => x > 20));
       forked$.subscribe((x) =>
         expect(x).toBeGreaterThan(20)
       );
@@ -260,8 +260,8 @@ describe("Fleuve", () => {
 
     it("should map emitted values", () => {
       forked$ = fleuve$.fork(
-        map((x) => x * 2),
-        map((x) => x + 5)
+        map((x: number) => x * 2),
+        map((x: number) => x + 5)
       );
       forked$.subscribe((x) => expect(x).toEqual(25));
       fleuve$.next(10);
@@ -272,7 +272,7 @@ describe("Fleuve", () => {
       expect.assertions(1);
 
       forked$ = fleuve$.fork(
-        map((x) => {
+        map((x: number) => {
           if (x < 100) {
             return x;
           } else {
@@ -397,8 +397,8 @@ describe("Fleuve", () => {
 
     it("should not accept any new values but should still have the original value", () => {
       const fleuve$ = new Fleuve(12);
-      const fork1$ = fleuve$.fork(map((x) => x * 2));
-      const fork2$ = fork1$.fork(filter((x) => x < 100));
+      const fork1$ = fleuve$.fork(map((x: number) => x * 2));
+      const fork2$ = fork1$.fork(filter((x: number) => x < 100));
 
       fleuve$.close();
       fork1$.subscribe((x) => expect(x).toEqual(24));
@@ -425,7 +425,7 @@ describe("Fleuve", () => {
         (x) => x * 2,
         (y) => y + 5,
         (z) => z / 5,
-        filter((x) => x > 0),
+        filter((x: number) => x > 0),
       ];
       const fleuve$ = new Fleuve<number>(5);
       fleuve$.compile(...operations);
@@ -437,7 +437,7 @@ describe("Fleuve", () => {
         (x) => x * 2,
         (y) => y + 5,
         (z) => z / 5,
-        filter((x) => x > 100),
+        filter((x: number) => x > 100),
       ];
       const fleuve$ = new Fleuve<number>(5);
       fleuve$.compile(...operations);
@@ -451,7 +451,7 @@ describe("Fleuve", () => {
         (x) => x * 2,
         (y) => y + 5,
         (z) => z / 5,
-        filter((x) => x > 100),
+        filter((x: number) => x > 100),
       ];
       fleuve$.compile(...operations);
       fleuve$.subscribe((x) => expect(x).toEqual(5));
@@ -464,7 +464,7 @@ describe("Fleuve", () => {
         (x) => x * 2,
         (y) => y + 5,
         (z) => z / 5,
-        filter((x) => x > 100),
+        filter((x: number) => x > 100),
       ];
       fleuve$.compile(...operations);
       fleuve$.subscribe((x) => expect(x).toEqual(5));
@@ -475,7 +475,7 @@ describe("Fleuve", () => {
       const fleuve$ = new Fleuve(100);
       expect.assertions(1);
         fleuve$.compile(
-          map((x) => {
+          map((x: number) => {
             if (x < 100) {
               return x;
             } else {

@@ -4,3 +4,10 @@ export class FilterError implements Error {
 
     constructor(public stack?: string) {}
 }
+
+export class UntilError implements Error {
+    name: string = 'UntilError';
+    message: string = 'Until predicate not matched anymore';
+    
+    constructor(public stack?: string) {}
+}

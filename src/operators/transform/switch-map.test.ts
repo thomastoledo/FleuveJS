@@ -1,4 +1,4 @@
-import { Fleuve } from "../fleuve/fleuve";
+import { Fleuve } from "../../fleuve/fleuve";
 import { switchMap } from "./switch-map";
 
 describe('switchMap', () => {

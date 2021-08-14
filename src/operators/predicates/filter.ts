@@ -1,6 +1,6 @@
 
-import { FilterError } from "../models/errors";
-import { OperatorFunction } from "../models/operator";
+import { FilterError } from "../../models/errors";
+import { OperatorFunction } from "../../models/operator";
 
 export const filter = function<T = any>(f: OperatorFunction<T, boolean>): OperatorFunction<T, Promise<T>> {
     return (source) => {

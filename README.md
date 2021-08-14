@@ -163,6 +163,12 @@ whenThrowing$(10, 0);
 - websocket
 - promise
 
+##### Replacement
+- replace
+- replaceNth
+- replaceN
+- replaceAll
+
 ### Allow to work with IndexedDB
 ### Allow to work with Promises
 ### Allow to work with RxJs Observables

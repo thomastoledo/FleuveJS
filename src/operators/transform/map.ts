@@ -1,4 +1,4 @@
-import { OperatorFunction } from "../models/operator";
+import { OperatorFunction } from "../../models/operator";
 
 export const map = function<T = any, U = T>(f: OperatorFunction<T, U>): OperatorFunction<T, Promise<U>> {
     return (source) => {

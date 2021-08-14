@@ -1,3 +1,3 @@
-export * from './map';
-export * from './filter';
-export * from './switch-map';
+export * from './transform/map';
+export * from './predicates/filter';
+export * from './transform/switch-map';
