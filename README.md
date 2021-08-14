@@ -105,10 +105,10 @@ In the next release, some methods might be moved as static operators. Stay tuned
 ### Next operators
 #### For pipe / fork / compile
 - until
-- while
+- asLongAs
 - nth
 - take
-- first
+- once
 
 #### Static
 ##### Functions
@@ -157,7 +157,7 @@ whenThrowing$(10, 0);
 ##### Predicates
 - filter
 - until
-- while
+- asLongAs
 
 ##### Asynchronous
 - websocket

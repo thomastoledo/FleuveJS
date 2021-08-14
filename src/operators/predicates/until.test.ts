@@ -1,4 +1,4 @@
-import { UntilError } from "../../models/errors";
+import { StopFleuveSignal } from "../../models/errors";
 import { until } from "./until";
 
 describe('until', () => {
@@ -8,7 +8,7 @@ describe('until', () => {
         for (; i < 11; i++) {
             await expect(untilGreaterThan10(i)).resolves.toEqual(i);
         }
-        await expect(untilGreaterThan10(i)).rejects.toEqual(new UntilError());
-        await expect(untilGreaterThan10(0)).rejects.toEqual(new UntilError());
+        await expect(untilGreaterThan10(i)).rejects.toEqual(new StopFleuveSignal());
+        await expect(untilGreaterThan10(0)).rejects.toEqual(new StopFleuveSignal());
     });
   });

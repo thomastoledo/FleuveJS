@@ -5,9 +5,9 @@ export class FilterError implements Error {
     constructor(public stack?: string) {}
 }
 
-export class UntilError implements Error {
-    name: string = 'UntilError';
-    message: string = 'Until predicate not matched anymore';
+export class StopFleuveSignal implements Error {
+    name: string = 'StopFleuveSignal';
+    message: string = 'Predicate was not matched anymore, Fleuve stopped';
     
     constructor(public stack?: string) {}
 }
