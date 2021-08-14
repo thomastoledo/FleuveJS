@@ -48,19 +48,12 @@ export class Fleuve<T = never> {
     return new EventSubscription(elem, eventType, eventListener);
   }
 
-  /**
-   * @deprecated use the close() method
-   */
-  dam(): void {
+  close(): void {
     this._forks$.forEach((fork$) => {
       fork$.close();
       fork$._complete();
       fork$._nextComplete();
     });
-  }
-
-  close(): void {
-    this.dam();
   }
 
   fork(...operators: OperatorFunction<T>[]): Fleuve<T> {
@@ -98,12 +91,7 @@ export class Fleuve<T = never> {
     return this;
   }
 
-  /**
-   * @deprecated please use compile - won't work next version
-   * @param operations
-   * @returns
-   */
-  pile(...operations: OperatorFunction<T>[]): this {
+  compile(...operations: OperatorFunction<T>[]): this {
     if (this._isComplete || !!this._error) {
       return this;
     }
@@ -115,10 +103,6 @@ export class Fleuve<T = never> {
       this._nextError();
     });
     return this;
-  }
-
-  compile(...operations: OperatorFunction<T>[]): this {
-    return this.pile(...operations);
   }
 
   pipe<U = any>(...operations: OperatorFunction<T, Promise<U>>[]): Fleuve<U> {
