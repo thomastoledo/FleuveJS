@@ -66,11 +66,57 @@ const eventSubscription = fleuve$.addEventListener('#clickMe', 'click', (x, even
 eventSubscription.unsubscribe();
 ```
 ### Operators
-`map` and `filter` operators are now available! You can use them that way:
+
+#### Mapping
+
+##### `map`
 
 ```ts
 const fleuve$ = new Fleuve(12);
-fleuve$.pipe(filter(x => !!x), map(x => x * 2)).subscribe((value) => console.log(value));
+fleuve$.pipe(map(x => x * 2)).subscribe((value) => console.log(value)); // will display "24"
+```
+
+##### `switchmap`
+
+```ts
+const fleuve$ = new Fleuve(12);
+fleuve$.pipe(switchmap((x) => {
+    if (x > 0) {
+        return new Fleuve(0);
+    }
+}));
+```
+
+#### Predicates
+
+##### `filter`
+
+```ts
+const fleuve$ = new Fleuve(12);
+const filtered$ = fleuve$.pipe(filter(x => x > 10));
+filtered$.subscribe((value) => console.log(value)); // will display "12" and "100"
+filtered$.next(0);
+filtered$.next(100); 
+```
+##### `until`
+
+```ts
+const fleuve$ = new Fleuve();
+fleuve$.pipe(until(x => x > 9)).subscribe((value) => console.log(value)); // will display 0, 1, ..., 9
+
+for(let i = 0; i < 11; i++) {
+    fleuve$.next(i);
+}
+```
+
+##### `asLongAs`
+```ts
+const fleuve$ = new Fleuve(0);
+fleuve$.pipe(asLongAs(x => x < 10)).subscribe((value) => console.log(value)); // will display 0, 1, ..., 9
+
+for(let i = 0; i < 11; i++) {
+    fleuve$.next(i);
+}
 ```
 
 ### `fork` the Fleuve
@@ -104,8 +150,6 @@ In the next release, some methods might be moved as static operators. Stay tuned
 
 ### Next operators
 #### For pipe / fork / compile
-- until
-- asLongAs
 - nth
 - take
 - once
