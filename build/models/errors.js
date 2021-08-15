@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.FilterError = void 0;
+exports.StopFleuveSignal = exports.FilterError = void 0;
 var FilterError = /** @class */ (function () {
     function FilterError(stack) {
         this.stack = stack;
@@ -10,3 +10,12 @@ var FilterError = /** @class */ (function () {
     return FilterError;
 }());
 exports.FilterError = FilterError;
+var StopFleuveSignal = /** @class */ (function () {
+    function StopFleuveSignal(stack) {
+        this.stack = stack;
+        this.name = 'StopFleuveSignal';
+        this.message = 'Predicate was not matched anymore, Fleuve stopped';
+    }
+    return StopFleuveSignal;
+}());
+exports.StopFleuveSignal = StopFleuveSignal;

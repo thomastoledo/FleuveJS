@@ -12,19 +12,9 @@ export declare class Fleuve<T = never> {
     private _error;
     constructor(_innerValue?: T | undefined);
     addEventListener(selector: string, eventType: string, listener: Listener<T>, options?: AddEventListenerOptions): EventSubscription;
-    /**
-     * @deprecated use the close() method
-     */
-    dam(): void;
     close(): void;
     fork(...operators: OperatorFunction<T>[]): Fleuve<T>;
     next(...events: T[]): this;
-    /**
-     * @deprecated please use compile - won't work next version
-     * @param operations
-     * @returns
-     */
-    pile(...operations: OperatorFunction<T>[]): this;
     compile(...operations: OperatorFunction<T>[]): this;
     pipe<U = any>(...operations: OperatorFunction<T, Promise<U>>[]): Fleuve<U>;
     subscribe(subscriber: Subscriber<T>): Subscription;

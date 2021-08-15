@@ -1,9 +1,10 @@
 import { Fleuve } from "./fleuve";
 import { EventSubscription, Listener } from "../models/event";
-import { Operator, OperatorFunction } from "../models/operator";
+import { OperationResult, OperatorFunction } from "../models/operator";
 import { OnNext, Subscriber } from "../models/subscription";
 import { filter } from "../operators/predicates/filter";
 import { map } from "../operators/transform/map";
+import { until } from "../operators/predicates/until";
 import { switchMap } from "../operators/transform/switch-map";
 
 describe("Fleuve", () => {
@@ -267,6 +268,18 @@ describe("Fleuve", () => {
       fleuve$.next(10);
     });
 
+    it('should print values until the predicate is matched', async () => {
+      forked$ = fleuve$.fork(
+        until((x: number) => x >= 10)
+      );
+
+      forked$.subscribe((value) => expect(value).toEqual(-1000));
+
+      for (let i = 0; i < 100; i++) {
+        fleuve$.next(i);
+      }
+    });
+
     it("should throw an error", () => {
       const thresholdError = new Error("Threshold error: value is > 100");
       expect.assertions(1);
@@ -410,7 +423,7 @@ describe("Fleuve", () => {
 
   describe("compile", () => {
     it("should execute each function and set a new value", () => {
-      const operations: OperatorFunction<number>[] = [
+      const operations: OperatorFunction<number, OperationResult<any>>[] = [
         jest.fn(),
         jest.fn(),
         jest.fn(),
@@ -421,10 +434,11 @@ describe("Fleuve", () => {
     });
 
     it("should update the _innerValue", () => {
-      const operations: OperatorFunction<number>[] = [
-        (x) => x * 2,
-        (y) => y + 5,
-        (z) => z / 5,
+      console.log('le truc qui fonctionne pas')
+      const operations: OperatorFunction<number, OperationResult<any>>[] = [
+        map((x) => x * 2),
+        map((y) => y + 5),
+        map((z) => z / 5),
         filter((x: number) => x > 0),
       ];
       const fleuve$ = new Fleuve<number>(5);
@@ -433,10 +447,10 @@ describe("Fleuve", () => {
     });
 
     it("should not update the _innerValue if a filter predicate is not matched", () => {
-      const operations: OperatorFunction<number>[] = [
-        (x) => x * 2,
-        (y) => y + 5,
-        (z) => z / 5,
+      const operations: OperatorFunction<number, OperationResult<any>>[] = [
+        map((x) => x * 2),
+        map((y) => y + 5),
+        map((z) => z / 5),
         filter((x: number) => x > 100),
       ];
       const fleuve$ = new Fleuve<number>(5);
@@ -447,10 +461,10 @@ describe("Fleuve", () => {
     it('should not update the _innerValue if the fleuve is in error', () => {
       const fleuve$ = new Fleuve<number>(5);
       (fleuve$ as any)._error = new Error('');
-      const operations: OperatorFunction<number>[] = [
-        (x) => x * 2,
-        (y) => y + 5,
-        (z) => z / 5,
+      const operations: OperatorFunction<number, OperationResult<any>>[] = [
+        map((x) => x * 2),
+        map((y) => y + 5),
+        map((z) => z / 5),
         filter((x: number) => x > 100),
       ];
       fleuve$.compile(...operations);
@@ -460,10 +474,10 @@ describe("Fleuve", () => {
     it('should not update the _innerValue if the fleuve is complete', () => {
       const fleuve$ = new Fleuve<number>(5);
       (fleuve$ as any)._complete();
-      const operations: OperatorFunction<number>[] = [
-        (x) => x * 2,
-        (y) => y + 5,
-        (z) => z / 5,
+      const operations: OperatorFunction<number, OperationResult<any>>[] = [
+        map((x) => x * 2),
+        map((y) => y + 5),
+        map((z) => z / 5),
         filter((x: number) => x > 100),
       ];
       fleuve$.compile(...operations);

@@ -67,18 +67,12 @@ var Fleuve = /** @class */ (function () {
         elem.addEventListener(eventType, eventListener, options);
         return new event_1.EventSubscription(elem, eventType, eventListener);
     };
-    /**
-     * @deprecated use the close() method
-     */
-    Fleuve.prototype.dam = function () {
+    Fleuve.prototype.close = function () {
         this._forks$.forEach(function (fork$) {
             fork$.close();
             fork$._complete();
             fork$._nextComplete();
         });
-    };
-    Fleuve.prototype.close = function () {
-        this.dam();
     };
     Fleuve.prototype.fork = function () {
         var operators = [];
@@ -115,12 +109,7 @@ var Fleuve = /** @class */ (function () {
         }
         return this;
     };
-    /**
-     * @deprecated please use compile - won't work next version
-     * @param operations
-     * @returns
-     */
-    Fleuve.prototype.pile = function () {
+    Fleuve.prototype.compile = function () {
         var _this = this;
         var operations = [];
         for (var _i = 0; _i < arguments.length; _i++) {
@@ -136,13 +125,6 @@ var Fleuve = /** @class */ (function () {
             _this._nextError();
         });
         return this;
-    };
-    Fleuve.prototype.compile = function () {
-        var operations = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            operations[_i] = arguments[_i];
-        }
-        return this.pile.apply(this, operations);
     };
     Fleuve.prototype.pipe = function () {
         var operations = [];

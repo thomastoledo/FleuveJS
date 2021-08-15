@@ -1,5 +1,35 @@
 export interface Operator<T = any, U = any> {
-    (operatorFunction: OperatorFunction<T, U>) : OperatorFunction<T>;
+    (operatorFunction: OperatorFunction<T, U>) : OperatorFunction<T, OperationResult<U>>;
 }
 
-export type OperatorFunction<T, U = any> = (source: T) => U;
+export type OperatorFunction<T, U = never> = (source: T) => U;
+
+export class OperationResult<T> {
+    constructor(private _value: T, private _flag?: OperationResultFlag) {}
+
+    get value() {
+        return this._value;
+    }
+
+    get flag() {
+        return this._flag;
+    }
+
+    isUnwrapSwitch(): boolean {
+        return this._flag === OperationResultFlag.UnwrapSwitch;
+    }
+
+    isMustStop(): boolean {
+        return this._flag === OperationResultFlag.MustStop;
+    }
+
+    isFilterNotMatched(): boolean {
+        return this._flag === OperationResultFlag.FilterNotMatched;
+    }
+}
+
+export enum OperationResultFlag {
+    UnwrapSwitch,
+    MustStop,
+    FilterNotMatched
+}

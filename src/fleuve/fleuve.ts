@@ -1,7 +1,11 @@
 import { filterNonFunctions, isFunction } from "../helpers/function.helper";
-import { FilterError } from "../models/errors";
 import { Listener, EventSubscription } from "../models/event";
-import { OperatorFunction } from "../models/operator";
+import {
+  OperationResult,
+  OperationResultFlag,
+  Operator,
+  OperatorFunction,
+} from "../models/operator";
 import {
   OnComplete,
   OnError,
@@ -17,8 +21,6 @@ export class Fleuve<T = never> {
 
   private _isStarted: boolean = false;
   private _isComplete: boolean = false;
-
-  private _isOperating: boolean = false;
 
   private _forks$: Fleuve<T>[] = [];
 
@@ -56,18 +58,33 @@ export class Fleuve<T = never> {
     });
   }
 
-  fork(...operators: OperatorFunction<T>[]): Fleuve<T> {
+  fork(...operators: OperatorFunction<T, OperationResult<any>>[]): Fleuve<T> {
     const fork$: Fleuve<T> = new Fleuve();
     fork$._preProcessOperations = operators;
 
     this.subscribe(
       (value: T) => {
-        fork$._executeOperations(value, fork$._preProcessOperations)
-        .then((value: T) => fork$.next(value))
-        .catch((err) => {
-          fork$._error = !(err instanceof FilterError) && err;
+        try {
+          const operationResult = fork$._executeOperations(
+            value,
+            fork$._preProcessOperations
+          );
+
+          if (operationResult.isMustStop()) {
+            fork$._complete();
+            fork$._nextComplete();
+            return;
+          }
+
+          if (operationResult.isFilterNotMatched()) {
+            return;
+          }
+
+          fork$.next(operationResult.value);
+        } catch (err) {
+          fork$._error = err;
           fork$._nextError();
-        });
+        }
       },
       (err) => (fork$._error = err),
       () => fork$._complete()
@@ -91,35 +108,64 @@ export class Fleuve<T = never> {
     return this;
   }
 
-  compile(...operations: OperatorFunction<T>[]): this {
+  compile(...operations: OperatorFunction<T, OperationResult<any>>[]): this {
     if (this._isComplete || !!this._error) {
       return this;
     }
 
-    this._executeOperations(this._innerValue as T, operations)
-    .then((value: T) => this.next(value))
-    .catch((err) => {
-      this._error = !(err instanceof FilterError) && err;
+    try {
+      const operationResult = this._executeOperations(
+        this._innerValue as T,
+        operations
+      );
+
+      if (operationResult.isMustStop()) {
+        this._complete();
+        this._nextComplete();
+        return this;
+      }
+
+      if (operationResult.isFilterNotMatched()) {
+        return this;
+      }
+
+      this.next(operationResult.value);
+    } catch (err) {
+      this._error = err;
       this._nextError();
-    });
+    }
+
     return this;
   }
 
-  pipe<U = any>(...operations: OperatorFunction<T, Promise<U>>[]): Fleuve<U> {
+  pipe<U = any>(
+    ...operations: OperatorFunction<T, OperationResult<U>>[]
+  ): Fleuve<U> {
     const fleuve$ = new Fleuve<U>();
     if (!this._isStarted || !!this._error || this._isComplete) {
       fleuve$._complete();
       return fleuve$;
     }
 
-    this._executeOperations(this._innerValue as T, operations)
-    .then((value: U) => fleuve$.next(value))
-    .catch((err) => {
-      fleuve$._error = !(err instanceof FilterError) && err;
-      fleuve$._nextError();
-      fleuve$._isComplete = err instanceof FilterError;
-      fleuve$._nextComplete();
-    });
+    try {
+      const operationResult = this._executeOperations(
+        this._innerValue as T,
+        operations
+      );
+
+      if (
+        operationResult.isMustStop() ||
+        operationResult.isFilterNotMatched()
+      ) {
+        fleuve$._complete();
+        fleuve$._nextComplete();
+        return fleuve$;
+      }
+      fleuve$.next(operationResult.value);
+    } catch (err) {
+      fleuve$._error = err;
+    }
+
     return fleuve$;
   }
 
@@ -138,8 +184,11 @@ export class Fleuve<T = never> {
       throw new Error("Please provide either a function or a Subscriber");
     }
 
-    let subscriber: Subscriber<T> =
-      this._createSubscriber(onNext, onError, onComplete);
+    let subscriber: Subscriber<T> = this._createSubscriber(
+      onNext,
+      onError,
+      onComplete
+    );
 
     this._doNext(subscriber);
     this._doError(subscriber);
@@ -168,9 +217,7 @@ export class Fleuve<T = never> {
   ): Subscriber<T> {
     if (isFunction(onNext)) {
       return Subscriber.of(
-        (value: T) => {
-          !this._isOperating && onNext(value);
-        },
+        (value: T) => onNext(value),
         (isFunction(onError) && onError) || undefined,
         (isFunction(onComplete) && onComplete) || undefined
       );
@@ -202,19 +249,24 @@ export class Fleuve<T = never> {
 
   private _computeValue(
     initValue: T,
-    ...operations: OperatorFunction<T, Promise<any>>[]
-  ): Promise<any> | T {
-    if (operations.length > 0) {
-      return operations
-        .slice(1)
-        .reduce(
-          async (promise: Promise<any>, fn) =>
-            await Promise.resolve(promise).then((val) => fn(val)),
-          operations[0](initValue)
-        );
-    } else {
-      return initValue;
+    ...operations:  OperatorFunction<T, OperationResult<any>>[]
+  ): OperationResult<any> {
+    let res: OperationResult<any> = new OperationResult(initValue);
+    for (let i = 0; i < operations.length; i++) {
+      res = operations[i](res.value);
+      switch (res.flag) {
+        case OperationResultFlag.FilterNotMatched:
+        case OperationResultFlag.MustStop:
+          i = operations.length;
+          break;
+        case OperationResultFlag.UnwrapSwitch:
+          res = new OperationResult(res.value._innerValue);
+          break;
+        default:
+          break;
+      }
     }
+    return res;
   }
 
   private _createEventListenerFromListener(
@@ -233,15 +285,13 @@ export class Fleuve<T = never> {
 
   private _executeOperations(
     value: T,
-    operations: OperatorFunction<T, any>[]
-  ): Promise<any> {
-    this._isOperating = true;
+    operators:  OperatorFunction<T, OperationResult<any>>[]
+  ): OperationResult<any> {
     const computedValue = this._computeValue(
       value as T,
-      ...(filterNonFunctions(...operations) as OperatorFunction<T>[])
+      ...(filterNonFunctions(...operators) as  OperatorFunction<T, OperationResult<any>>[])
     );
 
-    return Promise.resolve(computedValue)
-      .finally(() => (this._isOperating = false))
+    return computedValue;
   }
 }
