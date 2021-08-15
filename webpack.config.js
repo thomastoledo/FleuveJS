@@ -4,6 +4,7 @@ const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 module.exports = {
     mode: "production",
     entry: "./src/index.ts",
+    target: "web",
     output: {
         filename: "fleuve.bundle.js",
         path: path.resolve(__dirname, "bundle"),
@@ -15,7 +16,7 @@ module.exports = {
         outputModule: true,
     },
     resolve: {
-        extensions: ['.ts', '.js'],
+        extensions: ['.ts'],
         plugins: [new TsconfigPathsPlugin({ configFile: 'tsconfig.bundle.json' })]
     },
     module: {

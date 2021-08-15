@@ -1,15 +1,12 @@
-"use strict";
 var __spreadArray = (this && this.__spreadArray) || function (to, from) {
     for (var i = 0, il = from.length, j = to.length; i < il; i++, j++)
         to[j] = from[i];
     return to;
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.Fleuve = void 0;
-var function_helper_1 = require("../helpers/function.helper");
-var event_1 = require("../models/event");
-var operator_1 = require("../models/operator");
-var subscription_1 = require("../models/subscription");
+import { filterNonFunctions, isFunction } from "../helpers/function.helper";
+import { EventSubscription } from "../models/event";
+import { OperationResult, OperationResultFlag, } from "../models/operator";
+import { Subscriber, Subscription, } from "../models/subscription";
 var Fleuve = /** @class */ (function () {
     function Fleuve(_innerValue) {
         this._innerValue = _innerValue;
@@ -28,7 +25,7 @@ var Fleuve = /** @class */ (function () {
         }
         var eventListener = this._createEventListenerFromListener(listener);
         elem.addEventListener(eventType, eventListener, options);
-        return new event_1.EventSubscription(elem, eventType, eventListener);
+        return new EventSubscription(elem, eventType, eventListener);
     };
     Fleuve.prototype.close = function () {
         this._forks$.forEach(function (fork$) {
@@ -135,7 +132,7 @@ var Fleuve = /** @class */ (function () {
     };
     Fleuve.prototype.subscribe = function (onNext, onError, onComplete) {
         var _this = this;
-        if (!function_helper_1.isFunction(onNext) && !subscription_1.Subscriber.isInstanceOfSubscriber(onNext)) {
+        if (!isFunction(onNext) && !Subscriber.isInstanceOfSubscriber(onNext)) {
             throw new Error("Please provide either a function or a Subscriber");
         }
         var subscriber = this._createSubscriber(onNext, onError, onComplete);
@@ -143,7 +140,7 @@ var Fleuve = /** @class */ (function () {
         this._doError(subscriber);
         this._doComplete(subscriber);
         this._subscribers.push(subscriber);
-        return new subscription_1.Subscription(function () {
+        return new Subscription(function () {
             return (_this._subscribers = _this._subscribers.filter(function (s) { return s !== subscriber; }));
         });
     };
@@ -156,8 +153,8 @@ var Fleuve = /** @class */ (function () {
         this._subscribers.forEach(function (s) { return _this._doComplete(s); });
     };
     Fleuve.prototype._createSubscriber = function (onNext, onError, onComplete) {
-        if (function_helper_1.isFunction(onNext)) {
-            return subscription_1.Subscriber.of(function (value) { return onNext(value); }, (function_helper_1.isFunction(onError) && onError) || undefined, (function_helper_1.isFunction(onComplete) && onComplete) || undefined);
+        if (isFunction(onNext)) {
+            return Subscriber.of(function (value) { return onNext(value); }, (isFunction(onError) && onError) || undefined, (isFunction(onComplete) && onComplete) || undefined);
         }
         return onNext;
     };
@@ -189,16 +186,16 @@ var Fleuve = /** @class */ (function () {
         for (var _i = 1; _i < arguments.length; _i++) {
             operations[_i - 1] = arguments[_i];
         }
-        var res = new operator_1.OperationResult(initValue);
+        var res = new OperationResult(initValue);
         for (var i = 0; i < operations.length; i++) {
             res = operations[i](res.value);
             switch (res.flag) {
-                case operator_1.OperationResultFlag.FilterNotMatched:
-                case operator_1.OperationResultFlag.MustStop:
+                case OperationResultFlag.FilterNotMatched:
+                case OperationResultFlag.MustStop:
                     i = operations.length;
                     break;
-                case operator_1.OperationResultFlag.UnwrapSwitch:
-                    res = new operator_1.OperationResult(res.value._innerValue);
+                case OperationResultFlag.UnwrapSwitch:
+                    res = new OperationResult(res.value._innerValue);
                     break;
                 default:
                     break;
@@ -218,9 +215,9 @@ var Fleuve = /** @class */ (function () {
         this._isComplete = true;
     };
     Fleuve.prototype._executeOperations = function (value, operators) {
-        var computedValue = this._computeValue.apply(this, __spreadArray([value], function_helper_1.filterNonFunctions.apply(void 0, operators)));
+        var computedValue = this._computeValue.apply(this, __spreadArray([value], filterNonFunctions.apply(void 0, operators)));
         return computedValue;
     };
     return Fleuve;
 }());
-exports.Fleuve = Fleuve;
+export { Fleuve };

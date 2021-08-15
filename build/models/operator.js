@@ -1,6 +1,3 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.OperationResultFlag = exports.OperationResult = void 0;
 var OperationResult = /** @class */ (function () {
     function OperationResult(_value, _flag) {
         this._value = _value;
@@ -31,10 +28,10 @@ var OperationResult = /** @class */ (function () {
     };
     return OperationResult;
 }());
-exports.OperationResult = OperationResult;
-var OperationResultFlag;
+export { OperationResult };
+export var OperationResultFlag;
 (function (OperationResultFlag) {
     OperationResultFlag[OperationResultFlag["UnwrapSwitch"] = 0] = "UnwrapSwitch";
     OperationResultFlag[OperationResultFlag["MustStop"] = 1] = "MustStop";
     OperationResultFlag[OperationResultFlag["FilterNotMatched"] = 2] = "FilterNotMatched";
-})(OperationResultFlag = exports.OperationResultFlag || (exports.OperationResultFlag = {}));
+})(OperationResultFlag || (OperationResultFlag = {}));

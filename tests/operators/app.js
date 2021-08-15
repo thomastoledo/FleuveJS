@@ -1,5 +1,6 @@
 import {Fleuve, map, filter} from '../../bundle/fleuve.bundle.js';
 
+
 const result = document.getElementById('results');
 const fleuve$ = new Fleuve(12);
 

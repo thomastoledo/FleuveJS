@@ -4,11 +4,13 @@
         "strict": true,
         "target": "ES5",
         "rootDir": "src",
+        "module": "ES6",
         "moduleResolution": "Node",
         "lib": [
             "dom",
             "esnext"
         ],
+        "esModuleInterop": true
     },
     "exclude": [
         "**/*.test.ts",

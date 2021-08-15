@@ -3,7 +3,6 @@ import { Listener, EventSubscription } from "../models/event";
 import {
   OperationResult,
   OperationResultFlag,
-  Operator,
   OperatorFunction,
 } from "../models/operator";
 import {

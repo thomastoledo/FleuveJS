@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.Subscriber = exports.Subscription = void 0;
-var function_helper_1 = require("../helpers/function.helper");
+import { isFunction } from "../helpers/function.helper";
 var Subscription = /** @class */ (function () {
     function Subscription(_unsubscribeCallback) {
         this._unsubscribeCallback = _unsubscribeCallback;
@@ -11,7 +8,7 @@ var Subscription = /** @class */ (function () {
     };
     return Subscription;
 }());
-exports.Subscription = Subscription;
+export { Subscription };
 var Subscriber = /** @class */ (function () {
     function Subscriber(_onNext, _onError, _onComplete) {
         this._onNext = _onNext;
@@ -22,7 +19,7 @@ var Subscriber = /** @class */ (function () {
         return obj instanceof Subscriber;
     };
     Subscriber.of = function (onNext, onError, onComplete) {
-        if (!function_helper_1.isFunction(onNext) || (!!onError && !function_helper_1.isFunction(onError)) || (!!onComplete && !function_helper_1.isFunction(onComplete))) {
+        if (!isFunction(onNext) || (!!onError && !isFunction(onError)) || (!!onComplete && !isFunction(onComplete))) {
             throw new Error("Please provide functions for onNext, onError and onComplete");
         }
         return new Subscriber(onNext, onError, onComplete);
@@ -38,5 +35,5 @@ var Subscriber = /** @class */ (function () {
     };
     return Subscriber;
 }());
-exports.Subscriber = Subscriber;
+export { Subscriber };
 ;

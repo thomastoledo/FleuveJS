@@ -5,6 +5,7 @@
         "declaration": true,
         "outDir": "build",
         "rootDir": "src",
+        "module": "ES6",
         "moduleResolution": "Node",
         "lib": [
             "dom",

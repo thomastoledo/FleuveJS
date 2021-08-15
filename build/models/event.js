@@ -1,6 +1,3 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.EventSubscription = void 0;
 var EventSubscription = /** @class */ (function () {
     function EventSubscription(elem, eventType, listener) {
         var _this = this;
@@ -13,4 +10,4 @@ var EventSubscription = /** @class */ (function () {
     }
     return EventSubscription;
 }());
-exports.EventSubscription = EventSubscription;
+export { EventSubscription };

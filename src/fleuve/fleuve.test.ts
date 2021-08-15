@@ -434,7 +434,6 @@ describe("Fleuve", () => {
     });
 
     it("should update the _innerValue", () => {
-      console.log('le truc qui fonctionne pas')
       const operations: OperatorFunction<number, OperationResult<any>>[] = [
         map((x) => x * 2),
         map((y) => y + 5),
