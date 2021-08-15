@@ -1,5 +1,5 @@
 import { Listener, EventSubscription } from "../models/event";
-import { OperatorFunction } from "../models/operator";
+import { OperationResult, OperatorFunction } from "../models/operator";
 import { OnComplete, OnError, OnNext, Subscriber, Subscription } from "../models/subscription";
 export declare class Fleuve<T = never> {
     private _innerValue?;
@@ -7,16 +7,15 @@ export declare class Fleuve<T = never> {
     private _preProcessOperations;
     private _isStarted;
     private _isComplete;
-    private _isOperating;
     private _forks$;
     private _error;
     constructor(_innerValue?: T | undefined);
     addEventListener(selector: string, eventType: string, listener: Listener<T>, options?: AddEventListenerOptions): EventSubscription;
     close(): void;
-    fork(...operators: OperatorFunction<T>[]): Fleuve<T>;
+    fork(...operators: OperatorFunction<T, OperationResult<any>>[]): Fleuve<T>;
     next(...events: T[]): this;
-    compile(...operations: OperatorFunction<T>[]): this;
-    pipe<U = any>(...operations: OperatorFunction<T, Promise<U>>[]): Fleuve<U>;
+    compile(...operations: OperatorFunction<T, OperationResult<any>>[]): this;
+    pipe<U = any>(...operations: OperatorFunction<T, OperationResult<U>>[]): Fleuve<U>;
     subscribe(subscriber: Subscriber<T>): Subscription;
     subscribe(onNext: OnNext<T>, onError?: OnError, onComplete?: OnComplete<T>): Subscription;
     private _nextError;

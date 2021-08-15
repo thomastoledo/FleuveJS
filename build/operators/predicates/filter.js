@@ -1,20 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.filter = void 0;
-var errors_1 = require("../../models/errors");
+var operator_1 = require("../../models/operator");
 var filter = function (f) {
     return function (source) {
-        return new Promise(function (resolve, reject) {
-            try {
-                if (!f(source)) {
-                    throw new errors_1.FilterError();
-                }
-                resolve(source);
-            }
-            catch (error) {
-                reject(error);
-            }
-        });
+        return new operator_1.OperationResult(source, !f(source) ? operator_1.OperationResultFlag.FilterNotMatched : undefined);
     };
 };
 exports.filter = filter;

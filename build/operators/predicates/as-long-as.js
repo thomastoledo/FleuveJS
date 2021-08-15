@@ -1,18 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.asLongAs = void 0;
-var errors_1 = require("../../models/errors");
+var operator_1 = require("../../models/operator");
 var filter_1 = require("./filter");
 var asLongAs = function (f) {
     var stopped = false;
     return function (source) {
-        if (stopped) {
-            return Promise.reject(new errors_1.StopFleuveSignal());
-        }
-        return filter_1.filter(f)(source).catch(function (err) {
-            stopped = true;
-            throw err instanceof errors_1.FilterError ? new errors_1.StopFleuveSignal() : err;
-        });
+        return new operator_1.OperationResult(source, (stopped = stopped || filter_1.filter(f)(source).isFilterNotMatched())
+            ? operator_1.OperationResultFlag.MustStop
+            : undefined);
     };
 };
 exports.asLongAs = asLongAs;
