@@ -116,6 +116,8 @@ describe("Fleuve", () => {
       fleuve$.subscribe(subscriber2);
 
       fleuve$.next();
+      (fleuve$ as any)._preProcessOperations = [filter(x => x < 100)];
+      fleuve$.next(200);
       expect((subscriber1 as any)._onNext).not.toHaveBeenCalled();
       expect((subscriber2 as any)._onNext).not.toHaveBeenCalled();
     });
@@ -400,13 +402,22 @@ describe("Fleuve", () => {
     });
   });
 
-  describe("close", () => {
+  describe('close', () => {
+    it('should close the Fleuve', () => {
+      const fleuve$ = new Fleuve<number>();
+      fleuve$.subscribe(() => fail('Fleuve should have been closed'));
+      fleuve$.close();
+      fleuve$.next(12);
+    });
+  });
+
+  describe("closeForks", () => {
     it("should stop forked Fleuves", () => {
       const fleuve$ = new Fleuve<number>();
       const fork1$ = fleuve$.fork();
       const fork2$ = fleuve$.fork();
       const fork3$ = fork2$.fork();
-      fleuve$.close();
+      fleuve$.closeForks();
       fork1$.subscribe(() => fail("fork1$ should have been closed"));
       fork2$.subscribe(() => fail("fork1$ should have been closed"));
       fork3$.subscribe(() => fail("fork1$ should have been closed"));
@@ -419,7 +430,7 @@ describe("Fleuve", () => {
       const fork1$ = fleuve$.fork(map((x: number) => x * 2));
       const fork2$ = fork1$.fork(filter((x: number) => x < 100));
 
-      fleuve$.close();
+      fleuve$.closeForks();
       fork1$.subscribe((x) => expect(x).toEqual(24));
       fork2$.subscribe((x) => expect(x).toEqual(24));
 
@@ -478,7 +489,7 @@ describe("Fleuve", () => {
       fleuve$.subscribe((x) => expect(x).toEqual(5));
     });
 
-    it("should not update the _innerValue if the fleuve is complete", () => {
+    it("should not update the _innerValue if the fleuve is already complete", () => {
       const fleuve$ = new Fleuve<number>(5);
       (fleuve$ as any)._complete();
       const operations: OperatorFunction<number, OperationResult<any>>[] = [
@@ -487,6 +498,19 @@ describe("Fleuve", () => {
         map((z) => z / 5),
         filter((x: number) => x > 100),
       ];
+      fleuve$.compile(...operations);
+      fleuve$.subscribe((x) => expect(x).toEqual(5));
+    });
+
+    it('should not update the _innerValue if the fleuve must stop', () => {
+      const fleuve$ = new Fleuve<number>(5);
+      const operations: OperatorFunction<number, OperationResult<any>>[] = [
+        map((x) => x * 2),
+        map((y) => y + 5),
+        map((z) => z / 5),
+        until((x: number) => x > 0),
+      ];
+
       fleuve$.compile(...operations);
       fleuve$.subscribe((x) => expect(x).toEqual(5));
     });

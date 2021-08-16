@@ -51,8 +51,14 @@ export class Fleuve<T = never> {
   }
 
   close(): void {
+    this._complete();
+    this.closeForks();
+    this._nextComplete();
+  }
+
+  closeForks(): void {
     this._forks$.forEach((fork$) => {
-      fork$.close();
+      fork$.closeForks();
       fork$._complete();
       fork$._nextComplete();
     });
@@ -118,6 +124,7 @@ export class Fleuve<T = never> {
       if (operationResult.isFilterNotMatched()) {
         break;
       }
+
       this._innerValue = operationResult.value;
       this._callSubscribers(operationResult.value, ...this._subscribers);
     }

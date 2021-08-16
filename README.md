@@ -167,13 +167,12 @@ fleuve$.next(99); // the forks' subscribers won't be triggered
 ### Refactoring incoming
 In the next release, some methods might be moved as static operators. Stay tuned!
 
-### Add 
-
 ### Next operators
 #### For pipe / fork / compile
 - nth
 - take
 - once
+- ifElse
 
 #### Static
 ##### Functions
