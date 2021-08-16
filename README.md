@@ -1,6 +1,26 @@
 # FleuveJS
 
-A simple Observable Utility library
+![logo](https://github.com/nugetchar/FleuveJS/blob/main/logo.png)
+
+A simple Observable Utility library.
+
+## Why?
+Fleuve is called that way because of the philosophy behind: every Fleuve is a data stream, potentially infinite.
+You can add your own data to the Fleuve, and everyone on the Fleuve will be notified.
+
+You can also add some pipeline to the Fleuve, so what you receive has been processed in a convenient way before.
+
+You can bind a Fleuve behavior to the user's behavior.
+
+A Fleuve can be forked into multiple other Fleuves: each Fleuve child will dispatch some data everytime their parent dispatch some data. You can also close your stream of data, and everyone will know the Fleuve is complete.
+
+In short:
+- potentially infinite source of data;
+- cascading Fleuves by forking a data stream;
+- data pre-processing;
+- aims to allow practically anything as a source of data: a function execution, a user's action, a scalar value, a websocket...
+
+Any contribution and / or feedback is welcomed!
 
 ## Installation
 `npm i fleuvejs`
