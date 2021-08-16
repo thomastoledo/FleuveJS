@@ -34,6 +34,8 @@ import { Fleuve } from 'https://unpkg.com/browse/fleuvejs@latest/bundle/fleuve.b
 ## How To Use
 
 ### Instantiate a Fleuve
+
+*Warning: soon to be deprecated in favor of static operators `of` and `from`*
 ```ts
 const johnDoe$ = new Fleuve({firstname: 'john', lastname: 'doe'});
 const counter$ = new Fleuve(0);
@@ -159,6 +161,8 @@ for(let i = 0; i < 11; i++) {
 ```
 
 ### `fork` the Fleuve
+*Warning: might become a static operator rather than a method of the Fleuve class*
+
 You can fork a Fleuve. The new Fleuve will still be connected to the original Fleuve, but with some pre-processing operations.
 
 ```ts
