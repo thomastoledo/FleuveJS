@@ -1,5 +1,5 @@
 import { Fleuve } from "../fleuve/fleuve";
-import { Subscriber, Subscription } from "./subscription";
+import { Subscriber } from "./subscription";
 
 describe('Subscription', () => {
     it('unsubscribe - should unsubscribe from a Fleuve', () => {

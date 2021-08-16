@@ -173,13 +173,17 @@ describe("Fleuve", () => {
 
     it("should return a Fleuve(12)", () => {
       const fleuve$ = new Fleuve(12);
-      const filteredFleuve$ = fleuve$.pipe(filter((value: number) => value > 10));
+      const filteredFleuve$ = fleuve$.pipe(
+        filter((value: number) => value > 10)
+      );
       filteredFleuve$.subscribe((value) => expect(value).toEqual(12));
     });
 
     it("should return a filtered Fleuve with no value", () => {
       const fleuve$ = new Fleuve(12);
-      const filteredFleuve$ = fleuve$.pipe(filter((value: number) => value < 10));
+      const filteredFleuve$ = fleuve$.pipe(
+        filter((value: number) => value < 10)
+      );
       expect((filteredFleuve$ as any)._isStarted).toEqual(false);
       expect((filteredFleuve$ as any)._innerValue).toEqual(undefined);
       filteredFleuve$.subscribe(() => {
@@ -205,7 +209,9 @@ describe("Fleuve", () => {
 
     it("should return a new Fleuve", () => {
       const fleuve$ = new Fleuve(12);
-      const pipedFleuve$ = fleuve$.pipe(switchMap((x: number) => new Fleuve(x * 2)));
+      const pipedFleuve$ = fleuve$.pipe(
+        switchMap((x: number) => new Fleuve(x * 2))
+      );
       pipedFleuve$.subscribe((value) => expect(value).toEqual(24));
     });
 
@@ -213,7 +219,8 @@ describe("Fleuve", () => {
       const thresholdError = new Error("Threshold error: value is > 100");
       const fleuve$ = new Fleuve(100);
       expect.assertions(1);
-        fleuve$.pipe(
+      fleuve$
+        .pipe(
           map((x: number) => {
             if (x < 100) {
               return x;
@@ -221,7 +228,8 @@ describe("Fleuve", () => {
               throw thresholdError;
             }
           })
-        ).subscribe(jest.fn(), (err) => expect(err).toEqual(thresholdError));
+        )
+        .subscribe(jest.fn(), (err) => expect(err).toEqual(thresholdError));
     });
   });
 
@@ -252,9 +260,7 @@ describe("Fleuve", () => {
 
     it("should filter emitted values", () => {
       forked$ = fleuve$.fork(filter((x: number) => x > 20));
-      forked$.subscribe((x) =>
-        expect(x).toBeGreaterThan(20)
-      );
+      forked$.subscribe((x) => expect(x).toBeGreaterThan(20));
       fleuve$.next(10);
       fleuve$.next(30);
     });
@@ -268,10 +274,8 @@ describe("Fleuve", () => {
       fleuve$.next(10);
     });
 
-    it('should print values until the predicate is matched', async () => {
-      forked$ = fleuve$.fork(
-        until((x: number) => x >= 10)
-      );
+    it("should print values until the predicate is matched", async () => {
+      forked$ = fleuve$.fork(until((x: number) => x >= 10));
 
       forked$.subscribe((value) => expect(value).toEqual(-1000));
 
@@ -294,7 +298,9 @@ describe("Fleuve", () => {
         })
       );
       fleuve$.next(100);
-      forked$.subscribe(jest.fn(), (err) => {expect(err).toEqual(thresholdError)});
+      forked$.subscribe(jest.fn(), (err) => {
+        expect(err).toEqual(thresholdError);
+      });
     });
   });
 
@@ -383,7 +389,7 @@ describe("Fleuve", () => {
 
     it("should return an eventListener but never call it", () => {
       const fleuve$ = new Fleuve();
-      (fleuve$ as any)._error = new Error('');
+      (fleuve$ as any)._error = new Error("");
       const listener = jest.fn();
       const eventListener = (fleuve$ as any)._createEventListenerFromListener(
         listener
@@ -430,7 +436,9 @@ describe("Fleuve", () => {
       ];
       const fleuve$ = new Fleuve<number>();
       fleuve$.compile(...operations);
-      fleuve$.subscribe(() => operations.forEach((operator) => expect(operator).toHaveBeenCalled()));
+      fleuve$.subscribe(() =>
+        operations.forEach((operator) => expect(operator).toHaveBeenCalled())
+      );
     });
 
     it("should update the _innerValue", () => {
@@ -457,9 +465,9 @@ describe("Fleuve", () => {
       fleuve$.subscribe((x) => expect(x).toEqual(5));
     });
 
-    it('should not update the _innerValue if the fleuve is in error', () => {
+    it("should not update the _innerValue if the fleuve is in error", () => {
       const fleuve$ = new Fleuve<number>(5);
-      (fleuve$ as any)._error = new Error('');
+      (fleuve$ as any)._error = new Error("");
       const operations: OperatorFunction<number, OperationResult<any>>[] = [
         map((x) => x * 2),
         map((y) => y + 5),
@@ -470,7 +478,7 @@ describe("Fleuve", () => {
       fleuve$.subscribe((x) => expect(x).toEqual(5));
     });
 
-    it('should not update the _innerValue if the fleuve is complete', () => {
+    it("should not update the _innerValue if the fleuve is complete", () => {
       const fleuve$ = new Fleuve<number>(5);
       (fleuve$ as any)._complete();
       const operations: OperatorFunction<number, OperationResult<any>>[] = [
@@ -487,7 +495,8 @@ describe("Fleuve", () => {
       const thresholdError = new Error("Threshold error: value is > 100");
       const fleuve$ = new Fleuve(100);
       expect.assertions(1);
-        fleuve$.compile(
+      fleuve$
+        .compile(
           map((x: number) => {
             if (x < 100) {
               return x;
@@ -495,7 +504,8 @@ describe("Fleuve", () => {
               throw thresholdError;
             }
           })
-        ).subscribe(jest.fn(), (err) => expect(err).toEqual(thresholdError));
+        )
+        .subscribe(jest.fn(), (err) => expect(err).toEqual(thresholdError));
     });
   });
 });

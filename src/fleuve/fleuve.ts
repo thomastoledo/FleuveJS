@@ -17,6 +17,7 @@ export class Fleuve<T = never> {
   private _subscribers: Subscriber<T>[] = [];
 
   private _preProcessOperations: OperatorFunction<T, any>[] = [];
+  private _forkPipeline: OperatorFunction<T, any>[] = [];
 
   private _isStarted: boolean = false;
   private _isComplete: boolean = false;
@@ -59,14 +60,14 @@ export class Fleuve<T = never> {
 
   fork(...operators: OperatorFunction<T, OperationResult<any>>[]): Fleuve<T> {
     const fork$: Fleuve<T> = new Fleuve();
-    fork$._preProcessOperations = operators;
+    fork$._forkPipeline = operators;
 
     this.subscribe(
       (value: T) => {
         try {
           const operationResult = fork$._executeOperations(
             value,
-            fork$._preProcessOperations
+            fork$._forkPipeline
           );
 
           if (operationResult.isMustStop()) {
@@ -98,11 +99,27 @@ export class Fleuve<T = never> {
       return this;
     }
 
-    if ((this._isStarted = this._isStarted || arguments.length > 0)) {
-      events.forEach((event: T) => {
-        this._innerValue = event;
-        this._callSubscribers(event, ...this._subscribers);
-      });
+    if (!(this._isStarted = this._isStarted || arguments.length > 0)) {
+      return this;
+    }
+
+    for (let i = 0; i < events.length; i++) {
+      const operationResult = this._executeOperations(
+        events[i],
+        this._preProcessOperations
+      );
+      
+      if (operationResult.isMustStop()) {
+        this._complete();
+        this._nextComplete();
+        break;
+      }
+
+      if (operationResult.isFilterNotMatched()) {
+        break;
+      }
+      this._innerValue = operationResult.value;
+      this._callSubscribers(operationResult.value, ...this._subscribers);
     }
     return this;
   }
@@ -248,7 +265,7 @@ export class Fleuve<T = never> {
 
   private _computeValue(
     initValue: T,
-    ...operations:  OperatorFunction<T, OperationResult<any>>[]
+    ...operations: OperatorFunction<T, OperationResult<any>>[]
   ): OperationResult<any> {
     let res: OperationResult<any> = new OperationResult(initValue);
     for (let i = 0; i < operations.length; i++) {
@@ -284,11 +301,14 @@ export class Fleuve<T = never> {
 
   private _executeOperations(
     value: T,
-    operators:  OperatorFunction<T, OperationResult<any>>[]
+    operators: OperatorFunction<T, OperationResult<any>>[]
   ): OperationResult<any> {
     const computedValue = this._computeValue(
       value as T,
-      ...(filterNonFunctions(...operators) as  OperatorFunction<T, OperationResult<any>>[])
+      ...(filterNonFunctions(...operators) as OperatorFunction<
+        T,
+        OperationResult<any>
+      >[])
     );
 
     return computedValue;

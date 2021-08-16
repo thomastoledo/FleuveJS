@@ -40,13 +40,16 @@ const sum$ = fleuve$.pipe(
 ### Subscribe
 ```ts
 const fleuve$ = new Fleuve(12);
-fleuve$.subscribe((value) => console.log(value));
+fleuve$.subscribe((value) => console.log(value), (err) => console.error(err), () => console.log('fleuve complete'));
 
 const empty$ = new Fleuve();
 empty$.subscribe((value) => console.log(value)); // will never execute;
 
 // This one will throw an error
 fleuve$.subscribe(42);
+
+// You can as well create a Subscriber object
+fleuve$.subscribe(Subscriber.of((x) => console.log(x)));
 
 ```
 ### Add an event listener
@@ -67,16 +70,34 @@ eventSubscription.unsubscribe();
 ```
 ### Operators
 
-#### Mapping
+#### `preProcess` - static
+*This operator is static: it means you cannot use it as parameter for methods such as `pipe`, `compile` or `fork`*.
 
-##### `map`
+This operator allows you to create a Fleuve bearing pre-processing operations. Those operations will execute every time you provide a new value to the Fleuve.
+
+It is useful if you want to connect to a source of data, and only retrieve those which match a predicate.
+
+In the following example, we assume we want to retrieve some stats about temperatures, and we would like to only retrieve entries where the temperature is > 30°C;
+
+```ts
+const fleuve$ = preProcess(filter(stat => stat.temp > 30));
+
+// displayStat is an arbitrary function we would have to implement
+fleuve$.subscribe(stat => displayStat(stat));
+
+fetch('someUrl')
+    .then(res => res.json())
+    .then(stats => fleuve$.next(...stats));
+```
+
+#### `map`
 
 ```ts
 const fleuve$ = new Fleuve(12);
 fleuve$.pipe(map(x => x * 2)).subscribe((value) => console.log(value)); // will display "24"
 ```
 
-##### `switchmap`
+#### `switchmap`
 
 ```ts
 const fleuve$ = new Fleuve(12);
@@ -87,9 +108,7 @@ fleuve$.pipe(switchmap((x) => {
 }));
 ```
 
-#### Predicates
-
-##### `filter`
+#### `filter`
 
 ```ts
 const fleuve$ = new Fleuve(12);
@@ -98,21 +117,21 @@ filtered$.subscribe((value) => console.log(value)); // will display "12" and "10
 filtered$.next(0);
 filtered$.next(100); 
 ```
-##### `until`
+#### `until`
 
 ```ts
-const fleuve$ = new Fleuve();
-fleuve$.pipe(until(x => x > 9)).subscribe((value) => console.log(value)); // will display 0, 1, ..., 9
+const fleuve$ = preProcess(until(x => x >= 10));
+fleuve$.subscribe((value) => console.log(value)); // will display 0, 1, ..., 9
 
 for(let i = 0; i < 11; i++) {
     fleuve$.next(i);
 }
 ```
 
-##### `asLongAs`
+#### `asLongAs`
 ```ts
-const fleuve$ = new Fleuve(0);
-fleuve$.pipe(asLongAs(x => x < 10)).subscribe((value) => console.log(value)); // will display 0, 1, ..., 9
+const fleuve$ = preProcess(asLongAs(x => x < 10));
+fleuve$.subscribe((value) => console.log(value)); // will display 0, 1, ..., 9
 
 for(let i = 0; i < 11; i++) {
     fleuve$.next(i);
@@ -120,7 +139,7 @@ for(let i = 0; i < 11; i++) {
 ```
 
 ### `fork` the Fleuve
-You can fork a Fleuve. The new Fleuve will still be connected to the original Fleuve, but with some intermediaries operations.
+You can fork a Fleuve. The new Fleuve will still be connected to the original Fleuve, but with some pre-processing operations.
 
 ```ts
 const fleuve$ = new Fleuve(12);
@@ -147,6 +166,8 @@ fleuve$.next(99); // the forks' subscribers won't be triggered
 ## Next Features
 ### Refactoring incoming
 In the next release, some methods might be moved as static operators. Stay tuned!
+
+### Add 
 
 ### Next operators
 #### For pipe / fork / compile
@@ -197,11 +218,7 @@ whenThrowing$(10, 0);
 ##### Creation
 - of
 - from
-
-##### Predicates
-- filter
-- until
-- asLongAs
+- preProcess
 
 ##### Asynchronous
 - websocket

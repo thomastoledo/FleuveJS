@@ -10,15 +10,4 @@ describe('asLongAs', () => {
         expect(asLongAsGreaterThan0(i).isMustStop()).toEqual(true);
         expect(asLongAsGreaterThan0(1).isMustStop()).toEqual(true);
     });
-
-    // it('should reject an error', async () => {
-    //     const error = asLongAs((x) => {
-    //         if (x <= 0) {
-    //             throw new Error('Lesser than 0');
-    //         }
-    //         return true;
-    //     });
-
-    //     await expect(error(0)).rejects.toEqual(new Error('Lesser than 0'));
-    // });
   });
