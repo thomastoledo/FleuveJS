@@ -212,6 +212,15 @@ const fleuve$ = preProcess(
 fleuve$.next(...temperatures);
 ```
 
+#### `tap`
+The `tap` operator is useful when it comes to trigger a treatment that won't affect the outcome of the `pipe` / `compile` / `fork` operation.
+
+```ts
+const fleuve$ = of(12);
+const piped$ = fleuve$.pipe(tap(x => console.log(x), map(x => x * 2))); // expected to print 12
+piped$.subscribe((x) => console.log(x)); // expected to print 24
+```
+
 ## Next Features
 ### Refactoring incoming
 In the next release, some methods might be moved as static operators. Stay tuned!
@@ -227,7 +236,6 @@ In the next release, some methods might be moved as static operators. Stay tuned
 - debounce
 - throttle
 - reduce
-- tap
 - min
 - max
 

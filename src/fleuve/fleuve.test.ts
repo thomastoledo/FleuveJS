@@ -86,7 +86,6 @@ describe("Fleuve", () => {
       const fleuve$ = new Fleuve(12);
       fleuve$.compile(map(() => {throw new Error('')}));
       expect.assertions(1);
-      console.log('COUCOU', fleuve$)
       fleuve$.subscribe({next: () => fail(), complete: (final) => expect(final).toEqual(new Error(''))});
     });
 
