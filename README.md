@@ -78,7 +78,7 @@ empty$.subscribe((value) => console.log(value)); // will never execute;
 fleuve$.subscribe(42);
 
 // You can as well create a Subscriber object
-fleuve$.subscribe(Subscriber.of((x) => console.log(x)));
+fleuve$.subscribe(subscriberOf((x) => console.log(x)));
 
 ```
 ### Add an event listener
@@ -133,7 +133,7 @@ This operator allows you to create a Fleuve from a single scalar value. It creat
 
 ```ts
 const fleuve$ = of(12);
-fleuve$.subscribe(Subscriber.of((x) => console.log(x)))
+fleuve$.subscribe(subscriberOf((x) => console.log(x)))
 ```
 
 #### `preProcess` - static
