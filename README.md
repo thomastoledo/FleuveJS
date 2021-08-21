@@ -48,6 +48,13 @@ fleuve$.next(12, 13, 14, 15, 16); // fleuve$ inner value will go from 12 to 16
 fleuve$.compile(map((x) => x + 1), map((x) => x * 2)); // fleuve$ inner value will go from 16 to 17, then from 17 to 34
 ```
 
+### Close a fleuve with `close`
+
+```ts
+const fleuve$ = new Fleuve(0);
+fleuve$.close();
+```
+
 ### Pipe the Fleuve
 You can create a new Fleuve with the `pipe` method.
 
@@ -103,7 +110,7 @@ forked$.subscribe(x => console.log(x)); // nothing would happen at first
 fleuve$.next(20); // now, 20 would be printed in the browser's console
 ```
 
-### You can stop a Fleuve's forks with the `close` method
+### You can stop a Fleuve's forks with the `closeForks` method
 No more values will be allowed and the forks will be flagged as complete.
 
 ```ts
@@ -111,7 +118,7 @@ const fleuve$ = new Fleuve(12);
 const fork1$ = fleuve$.fork(map(x => x * 2));
 const fork2$ = fork1$.fork(filter(x => x < 100));
 
-fleuve$.close();
+fleuve$.closeForks();
 fork1$.subscribe(x => console.log('fork1$ value', x)); // will display "24"
 fork2$.subscribe(x => console.log('fork2$ value', x)); // will display "24"
 
