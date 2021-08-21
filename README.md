@@ -45,7 +45,7 @@ const counter$ = new Fleuve(0);
 ```ts
 const fleuve$ = new Fleuve(0);
 fleuve$.next(12, 13, 14, 15, 16); // fleuve$ inner value will go from 12 to 16
-fleuve$.compile((x) => x + 1, (x) => x * 2); // fleuve$ inner value will go from 16 to 17, then from 17 to 34
+fleuve$.compile(map((x) => x + 1), map((x) => x * 2)); // fleuve$ inner value will go from 16 to 17, then from 17 to 34
 ```
 
 ### Pipe the Fleuve
@@ -54,8 +54,8 @@ You can create a new Fleuve with the `pipe` method.
 ```ts
 const fleuve$ = new Fleuve(18729);
 const sum$ = fleuve$.pipe(
-    (x) => (x + '').split(''), 
-    (numbers) => numbers.reduce((acc, curr) => acc + curr, 0)
+    map((x) => (x + '').split('')), 
+    map((numbers) => numbers.reduce((acc, curr) => acc + curr, 0))
 );
 ```
 
@@ -90,10 +90,47 @@ const eventSubscription = fleuve$.addEventListener('#clickMe', 'click', (x, even
 ```js
 eventSubscription.unsubscribe();
 ```
+
+### `fork` the Fleuve
+*Warning: might become a static operator rather than a method of the Fleuve class*
+
+You can fork a Fleuve. The new Fleuve will still be connected to the original Fleuve, but with some pre-processing operations.
+
+```ts
+const fleuve$ = new Fleuve(12);
+const forked$ = fleuve$.fork(filter(x => x > 15));
+forked$.subscribe(x => console.log(x)); // nothing would happen at first
+fleuve$.next(20); // now, 20 would be printed in the browser's console
+```
+
+### You can stop a Fleuve's forks with the `close` method
+No more values will be allowed and the forks will be flagged as complete.
+
+```ts
+const fleuve$ = new Fleuve(12);
+const fork1$ = fleuve$.fork(map(x => x * 2));
+const fork2$ = fork1$.fork(filter(x => x < 100));
+
+fleuve$.close();
+fork1$.subscribe(x => console.log('fork1$ value', x)); // will display "24"
+fork2$.subscribe(x => console.log('fork2$ value', x)); // will display "24"
+
+fleuve$.next(99); // the forks' subscribers won't be triggered
+```
+
 ### Operators
+#### `of` - static
+*This operator is static: it means you cannot use it as a parameter for methods such as `pipe`, `compile` or `fork`.*
+
+This operator allows you to create a Fleuve from a single scalar value. It creates a finite Fleuve with one or multiple scalar values. Once created, the Fleuve is automatically complete.
+
+```ts
+const fleuve$ = of(12);
+fleuve$.subscribe(Subscriber.of((x) => console.log(x)))
+```
 
 #### `preProcess` - static
-*This operator is static: it means you cannot use it as parameter for methods such as `pipe`, `compile` or `fork`*.
+*This operator is static: it means you cannot use it as a parameter for methods such as `pipe`, `compile` or `fork`*.
 
 This operator allows you to create a Fleuve bearing pre-processing operations. Those operations will execute every time you provide a new value to the Fleuve.
 
@@ -160,31 +197,19 @@ for(let i = 0; i < 11; i++) {
 }
 ```
 
-### `fork` the Fleuve
-*Warning: might become a static operator rather than a method of the Fleuve class*
+#### `ifElse`
+The `ifElse` operator is pretty useful when it comes to add branches to a Fleuve. it can be used either on a `pipe`, `compile`, `fork` method or on a *creation operator* such as `preProcess`.
 
-You can fork a Fleuve. The new Fleuve will still be connected to the original Fleuve, but with some pre-processing operations.
-
-```ts
-const fleuve$ = new Fleuve(12);
-const forked$ = fleuve$.fork(filter(x => x > 15));
-forked$.subscribe(x => console.log(x)); // nothing would happen at first
-fleuve$.next(20); // now, 20 would be printed in the browser's console
-```
-
-### You can stop a Fleuve's forks with the `close` method
-No more values will be allowed and the forks will be flagged as complete.
+If the next example, we want to sort out some data and apply a different process according to each value. Values over 30 will trigger logging treatment, while others will just trigger an API call.
 
 ```ts
-const fleuve$ = new Fleuve(12);
-const fork1$ = fleuve$.fork(map(x => x * 2));
-const fork2$ = fork1$.fork(filter(x => x < 100));
-
-fleuve$.close();
-fork1$.subscribe(x => console.log('fork1$ value', x)); // will display "24"
-fork2$.subscribe(x => console.log('fork2$ value', x)); // will display "24"
-
-fleuve$.next(99); // the forks' subscribers won't be triggered
+const temperatures = [-15, 0, 12, 16, 30, 35, 45, -8];
+const fleuve$ = preProcess(
+    ifElse((x) => x > 30, 
+            [tap((x) => logError(`Unexpected value: ${x}`))], 
+            [tap((x) => saveTemp(x))])
+    );
+fleuve$.next(...temperatures);
 ```
 
 ## Next Features
@@ -196,7 +221,16 @@ In the next release, some methods might be moved as static operators. Stay tuned
 - nth
 - take
 - once
-- ifElse
+- times
+- catchError
+- throwError
+- debounce
+- throttle
+- reduce
+- tap
+- min
+- max
+
 
 #### Static
 ##### Functions
@@ -204,6 +238,7 @@ In the next release, some methods might be moved as static operators. Stay tuned
 - before
 - after
 - whenThrowing
+- onFunction
 
 Example:
 ```js
@@ -239,9 +274,10 @@ whenThrowing$(10, 0);
 ```
 
 ##### Creation
-- of
-- from
-- preProcess
+- from: a finite Fleuve from a finite sequence
+- preProcess: an infinite Fleuve with zero or multiple pre-processing operations
+- infinite: an infinite Fleuve
+- compose: to compose finite and infinite Fleuve creators
 
 ##### Asynchronous
 - websocket
@@ -252,6 +288,12 @@ whenThrowing$(10, 0);
 - replaceNth
 - replaceN
 - replaceAll
+
+##### Predicates
+- or
+- and
+- xor
+- not
 
 ### Allow to work with IndexedDB
 ### Allow to work with Promises

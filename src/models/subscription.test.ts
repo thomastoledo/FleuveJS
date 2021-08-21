@@ -1,5 +1,5 @@
 import { Fleuve } from "../fleuve/fleuve";
-import { Subscriber } from "./subscription";
+import { subscriberOf } from "./subscription";
 
 describe('Subscription', () => {
     it('unsubscribe - should unsubscribe from a Fleuve', () => {
@@ -14,7 +14,7 @@ describe('Subscription', () => {
     it('should throw an error at Subscriber creation', () => {
         expect.assertions(1);
         try {
-            Subscriber.of(5 as any);
+            subscriberOf(5 as any);
         } catch(err) {
             expect(err).toEqual(new Error(`Please provide functions for onNext, onError and onComplete`));
         }

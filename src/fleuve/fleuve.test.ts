@@ -1,7 +1,7 @@
 import { Fleuve } from "./fleuve";
 import { EventSubscription, Listener } from "../models/event";
 import { OperationResult, OperatorFunction } from "../models/operator";
-import { OnNext, Subscriber } from "../models/subscription";
+import { subscriberOf, OnNext, Subscriber } from "../models/subscription";
 import { filter } from "../operators/predicates/filter";
 import { map } from "../operators/transform/map";
 import { until } from "../operators/predicates/until";
@@ -56,20 +56,20 @@ describe("Fleuve", () => {
     });
 
     it("should not execute the subscriber", () => {
-      const subscriber: Subscriber = Subscriber.of(jest.fn());
+      const subscriber: Subscriber = subscriberOf(jest.fn());
       const fleuve$ = new Fleuve();
       fleuve$.subscribe(subscriber);
-      expect((subscriber as any)._onNext).not.toHaveBeenCalled();
+      expect(subscriber.next).not.toHaveBeenCalled();
     });
 
     it("should execute the subscriber", () => {
-      const subscriber: Subscriber = Subscriber.of(jest.fn());
+      const subscriber: Subscriber = subscriberOf(jest.fn());
       const fleuve$ = new Fleuve<number>(12);
       fleuve$.subscribe(subscriber);
-      expect((subscriber as any)._onNext).toHaveBeenNthCalledWith(1, 12);
+      expect(subscriber.next).toHaveBeenNthCalledWith(1, 12);
       expect((fleuve$ as any)._isStarted).toEqual(true);
       fleuve$.next(undefined as any);
-      expect((subscriber as any)._onNext).toHaveBeenNthCalledWith(2, undefined);
+      expect(subscriber.next).toHaveBeenNthCalledWith(2, undefined);
     });
 
     it("should execute onNext", () => {
@@ -80,6 +80,19 @@ describe("Fleuve", () => {
       expect((fleuve$ as any)._isStarted).toEqual(true);
       fleuve$.next(undefined as any);
       expect(onNext).toHaveBeenNthCalledWith(2, undefined);
+    });
+
+    it('should execute onComplete with the error', () => {
+      const fleuve$ = new Fleuve(12);
+      fleuve$.compile(map(() => {throw new Error('')}));
+      expect.assertions(1);
+      console.log('COUCOU', fleuve$)
+      fleuve$.subscribe({next: () => fail(), complete: (final) => expect(final).toEqual(new Error(''))});
+    });
+
+    it('should execute onComplete with the value', () => {
+      const fleuve$ = new Fleuve(12);
+      fleuve$.subscribe({next: jest.fn(), complete: (final) => expect(final).toEqual(12)});
     });
   });
 
@@ -95,22 +108,22 @@ describe("Fleuve", () => {
 
     it("should trigger each subscriber of the Fleuve", () => {
       const fleuve$ = new Fleuve<number>();
-      const subscriber1: Subscriber = Subscriber.of(jest.fn());
-      const subscriber2: Subscriber = Subscriber.of(jest.fn());
+      const subscriber1: Subscriber = subscriberOf(jest.fn());
+      const subscriber2: Subscriber = subscriberOf(jest.fn());
       fleuve$.subscribe(subscriber1);
       fleuve$.subscribe(subscriber2);
 
-      expect((subscriber1 as any)._onNext).not.toHaveBeenCalled();
-      expect((subscriber2 as any)._onNext).not.toHaveBeenCalled();
+      expect(subscriber1.next).not.toHaveBeenCalled();
+      expect(subscriber2.next).not.toHaveBeenCalled();
       fleuve$.next(12, 13, 14, 15, -1);
-      expect((subscriber1 as any)._onNext).toHaveBeenCalledTimes(5);
-      expect((subscriber2 as any)._onNext).toHaveBeenCalledTimes(5);
+      expect(subscriber1.next).toHaveBeenCalledTimes(5);
+      expect(subscriber2.next).toHaveBeenCalledTimes(5);
     });
 
     it("should not call any subscriber of the Fleuve", () => {
       const fleuve$ = new Fleuve<number>();
-      const subscriber1: Subscriber = Subscriber.of(jest.fn());
-      const subscriber2: Subscriber = Subscriber.of(jest.fn());
+      const subscriber1: Subscriber = subscriberOf(jest.fn());
+      const subscriber2: Subscriber = subscriberOf(jest.fn());
 
       fleuve$.subscribe(subscriber1);
       fleuve$.subscribe(subscriber2);
@@ -118,8 +131,8 @@ describe("Fleuve", () => {
       fleuve$.next();
       (fleuve$ as any)._preProcessOperations = [filter(x => x < 100)];
       fleuve$.next(200);
-      expect((subscriber1 as any)._onNext).not.toHaveBeenCalled();
-      expect((subscriber2 as any)._onNext).not.toHaveBeenCalled();
+      expect(subscriber1.next).not.toHaveBeenCalled();
+      expect(subscriber2.next).not.toHaveBeenCalled();
     });
 
     it("should set _isStarted to true", () => {
@@ -233,6 +246,13 @@ describe("Fleuve", () => {
         )
         .subscribe(jest.fn(), (err) => expect(err).toEqual(thresholdError));
     });
+
+    it('should return a Fleuve with an error', () => {
+      const fleuve$ = new Fleuve();
+      (fleuve$ as any)._error = new Error('');
+      expect.assertions(1);
+      fleuve$.pipe(map((x) => x * 2)).subscribe(() => fail(), (err) => expect(err).toEqual(new Error('')));
+    });
   });
 
   describe("fork", () => {
@@ -303,6 +323,22 @@ describe("Fleuve", () => {
       forked$.subscribe(jest.fn(), (err) => {
         expect(err).toEqual(thresholdError);
       });
+    });
+
+    it('should complete the fork', () => {
+      forked$ = fleuve$.fork(until(x => x > 0));
+      fleuve$.next(100);
+      const completeCb = jest.fn();
+      forked$.subscribe((x) => expect(x).toEqual(100), () => fail(`Should not trigger the onError callback`), completeCb);
+      expect(completeCb).toHaveBeenCalledTimes(1);
+      fleuve$.next(10000);
+      forked$.next(10000);
+    });
+
+    it('should set the fork on error', () => {
+      fleuve$.compile(map(() => {throw new Error('')}));
+      forked$ = fleuve$.fork();
+      expect((forked$ as any)._error).toEqual(new Error(''));
     });
   });
 

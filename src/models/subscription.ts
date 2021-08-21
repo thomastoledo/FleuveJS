@@ -11,35 +11,21 @@ interface UnsubscribeCallback {
     (): void
 }
 
-export class Subscriber<T = any> {
-  
-    static isInstanceOfSubscriber(obj: any): obj is Subscriber {
-      return obj instanceof Subscriber;
-    }
-  
-    static of<T>(onNext: OnNext<T>, onError?: OnError, onComplete?: OnComplete<T>): Subscriber<T> {
-      if (!isFunction(onNext) || (!!onError && !isFunction(onError)) || (!!onComplete && !isFunction(onComplete))) {
-        throw new Error(`Please provide functions for onNext, onError and onComplete`);
-      }
-      return new Subscriber<T>(onNext, onError, onComplete);
-    }
-  
-    private constructor(
-      private _onNext: OnNext<T>, private _onError?: OnError, private _onComplete?: OnComplete<T>) {
-    }
-  
-    public onNext(t: T) {
-      return this._onNext(t);
-    }
-  
-    public onError(err: Error) {
-      return this._onError && this._onError(err);
-    }
-  
-    public onComplete(value: T | Error | undefined) {
-      return this._onComplete && this._onComplete(value);
-    }
+export interface Subscriber<T = any> {
+  next: OnNext<T>, error?: OnError, complete?: OnComplete<T>
+}
+
+export function isInstanceOfSubscriber(obj: any): obj is Subscriber {
+  return isFunction(obj.next) && (obj.error === undefined || isFunction(obj.error)) && (obj.complete == undefined || isFunction(obj.complete));
+}
+
+export function subscriberOf<T>(next: OnNext<T>, error?: OnError, complete?: OnComplete<T>): Subscriber<T> {
+  if (!isInstanceOfSubscriber({next, error, complete})) {
+    throw new Error(`Please provide functions for onNext, onError and onComplete`);
   }
+  return {next, error, complete};
+}
+
   
   export interface OnNext<T> {
     (t: T): void;

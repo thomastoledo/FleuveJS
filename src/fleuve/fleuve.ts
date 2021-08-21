@@ -6,6 +6,8 @@ import {
   OperatorFunction,
 } from "../models/operator";
 import {
+  isInstanceOfSubscriber,
+  subscriberOf,
   OnComplete,
   OnError,
   OnNext,
@@ -25,6 +27,8 @@ export class Fleuve<T = never> {
   private _forks$: Fleuve<T>[] = [];
 
   private _error: Error | null = null;
+
+  private _isFinite!: boolean;
 
   constructor(private _innerValue?: T) {
     this._isStarted = arguments.length > 0;
@@ -64,12 +68,47 @@ export class Fleuve<T = never> {
     });
   }
 
+  compile(...operations: OperatorFunction<T, OperationResult<any>>[]): this {
+    if (this._isFinite || this._isComplete || !!this._error) {
+      return this;
+    }
+
+    try {
+      const operationResult = this._executeOperations(
+        this._innerValue as T,
+        operations
+      );
+
+      if (operationResult.isMustStop()) {
+        this._complete();
+        this._nextComplete();
+        return this;
+      }
+
+      if (operationResult.isFilterNotMatched()) {
+        return this;
+      }
+
+      this.next(operationResult.value);
+    } catch (err) {
+      this._error = err;
+      this._nextError();
+      this.close();
+    }
+
+    return this;
+  }
+
   fork(...operators: OperatorFunction<T, OperationResult<any>>[]): Fleuve<T> {
     const fork$: Fleuve<T> = new Fleuve();
     fork$._forkPipeline = operators;
 
     this.subscribe(
       (value: T) => {
+        if (!!fork$._error) {
+          return;
+        }
+
         try {
           const operationResult = fork$._executeOperations(
             value,
@@ -92,7 +131,11 @@ export class Fleuve<T = never> {
           fork$._nextError();
         }
       },
-      (err) => (fork$._error = err),
+      (err) => {
+        fork$._error = err;
+        fork$._nextError();
+        fork$.close();
+      },
       () => fork$._complete()
     );
 
@@ -101,11 +144,7 @@ export class Fleuve<T = never> {
   }
 
   next(...events: T[]): this {
-    if (this._isComplete || !!this._error) {
-      return this;
-    }
-
-    if (!(this._isStarted = this._isStarted || arguments.length > 0)) {
+    if (this._isFinite || this._isComplete || !!this._error || !(this._isStarted = this._isStarted || arguments.length > 0)) {
       return this;
     }
 
@@ -131,42 +170,17 @@ export class Fleuve<T = never> {
     return this;
   }
 
-  compile(...operations: OperatorFunction<T, OperationResult<any>>[]): this {
-    if (this._isComplete || !!this._error) {
-      return this;
-    }
-
-    try {
-      const operationResult = this._executeOperations(
-        this._innerValue as T,
-        operations
-      );
-
-      if (operationResult.isMustStop()) {
-        this._complete();
-        this._nextComplete();
-        return this;
-      }
-
-      if (operationResult.isFilterNotMatched()) {
-        return this;
-      }
-
-      this.next(operationResult.value);
-    } catch (err) {
-      this._error = err;
-      this._nextError();
-    }
-
-    return this;
-  }
-
   pipe<U = any>(
     ...operations: OperatorFunction<T, OperationResult<U>>[]
   ): Fleuve<U> {
     const fleuve$ = new Fleuve<U>();
-    if (!this._isStarted || !!this._error || this._isComplete) {
-      fleuve$._complete();
+    if (!!this._error) {
+      fleuve$._error = this._error;
+      fleuve$.close();
+      return fleuve$;
+    }
+
+    if (!this._isStarted) {
       return fleuve$;
     }
 
@@ -192,18 +206,18 @@ export class Fleuve<T = never> {
     return fleuve$;
   }
 
-  subscribe(subscriber: Subscriber<T>): Subscription;
   subscribe(
     onNext: OnNext<T>,
     onError?: OnError,
     onComplete?: OnComplete<T>
   ): Subscription;
+  subscribe(subscriber: Subscriber<T>): Subscription;
   subscribe(
     onNext: OnNext<T> | Subscriber<T>,
     onError?: OnError,
     onComplete?: OnComplete<T>
   ): Subscription {
-    if (!isFunction(onNext) && !Subscriber.isInstanceOfSubscriber(onNext)) {
+    if (!isFunction(onNext) && !isInstanceOfSubscriber(onNext)) {
       throw new Error("Please provide either a function or a Subscriber");
     }
 
@@ -234,13 +248,13 @@ export class Fleuve<T = never> {
   }
 
   private _createSubscriber(
-    onNext: OnNext<T> | Subscriber<any>,
+    onNext: OnNext<T> | Subscriber<T>,
     onError?: OnError,
     onComplete?: OnComplete<T>
   ): Subscriber<T> {
     if (isFunction(onNext)) {
-      return Subscriber.of(
-        (value: T) => onNext(value),
+      return subscriberOf(
+        onNext,
         (isFunction(onError) && onError) || undefined,
         (isFunction(onComplete) && onComplete) || undefined
       );
@@ -249,25 +263,25 @@ export class Fleuve<T = never> {
   }
 
   private _doComplete(subscriber: Subscriber<T>) {
-    if (this._isComplete) {
-      subscriber.onComplete(this._error ?? this._innerValue);
+    if (this._isComplete && subscriber.complete) {
+      subscriber.complete(this._error ?? this._innerValue);
     }
   }
 
   private _doError(subscriber: Subscriber<T>) {
-    if (!this._isComplete && !!this._error) {
-      subscriber.onError(this._error);
+    if (!!this._error && subscriber.error) {
+      subscriber.error(this._error);
     }
   }
 
   private _doNext(subscriber: Subscriber<T>) {
-    if (this._isStarted && !this._isComplete && !this._error) {
-      subscriber.onNext(this._innerValue as T);
+    if (this._isStarted && !this._error) {
+      subscriber.next(this._innerValue as T);
     }
   }
 
   private _callSubscribers(event: T, ...subscribers: Subscriber<T>[]): void {
-    subscribers.forEach((s) => s.onNext(event));
+    subscribers.forEach((s) => s.next(event));
   }
 
   private _computeValue(

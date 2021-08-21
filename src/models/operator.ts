@@ -1,7 +1,3 @@
-export interface Operator<T = any, U = any> {
-    (operatorFunction: OperatorFunction<T, U>) : OperatorFunction<T, OperationResult<U>>;
-}
-
 export type OperatorFunction<T, U = never> = (source: T) => U;
 
 export class OperationResult<T> {

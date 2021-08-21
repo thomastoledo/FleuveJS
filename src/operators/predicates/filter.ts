@@ -7,7 +7,7 @@ import {
 export const filter = function <T = any>(
   f: OperatorFunction<T, boolean>
 ): OperatorFunction<T, OperationResult<T>> {
-  return (source) =>
+  return (source: T) =>
     new OperationResult(
       source,
       !f(source) ? OperationResultFlag.FilterNotMatched : undefined
