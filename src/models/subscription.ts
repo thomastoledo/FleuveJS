@@ -12,14 +12,14 @@ interface UnsubscribeCallback {
 }
 
 export interface Subscriber<T = any> {
-  next: OnNext<T>, error?: OnError, complete?: OnComplete<T>
+  next: OnNext<T>, error?: OnError, complete?: OnComplete
 }
 
 export function isInstanceOfSubscriber(obj: any): obj is Subscriber {
   return isFunction(obj.next) && (obj.error === undefined || isFunction(obj.error)) && (obj.complete == undefined || isFunction(obj.complete));
 }
 
-export function subscriberOf<T>(next: OnNext<T>, error?: OnError, complete?: OnComplete<T>): Subscriber<T> {
+export function subscriberOf<T>(next: OnNext<T>, error?: OnError, complete?: OnComplete): Subscriber<T> {
   if (!isInstanceOfSubscriber({next, error, complete})) {
     throw new Error(`Please provide functions for onNext, onError and onComplete`);
   }
@@ -35,7 +35,7 @@ export function subscriberOf<T>(next: OnNext<T>, error?: OnError, complete?: OnC
     (err: Error): void
   }
   
-  export interface OnComplete<T> {
-    (result: T | Error | undefined): void
+  export interface OnComplete {
+    (): void
   };
   

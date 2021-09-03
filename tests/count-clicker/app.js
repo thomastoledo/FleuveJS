@@ -1,6 +1,6 @@
-import { Fleuve } from '../../bundle/fleuve.bundle.js';
+import { Observable } from '../../bundle/observable.bundle.js';
 
-const counter$ = new Fleuve(0);
+const counter$ = new Observable(0);
 const counter = document.getElementById('counter');
 
 counter$.subscribe((count) => {

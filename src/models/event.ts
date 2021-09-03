@@ -1,7 +1,7 @@
 export class EventSubscription {
   constructor(
     private elem: Element,
-    private eventType: string,
+    private eventType: keyof HTMLElementEventMap,
     private listener: EventListener
   ) {}
   unsubscribe = () => {

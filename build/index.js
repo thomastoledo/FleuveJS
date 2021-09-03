@@ -1,2 +1,2 @@
-export * from './fleuve/fleuve';
+export * from './observable/observable';
 export * from './operators/index';

@@ -1,7 +1,6 @@
-import { Fleuve } from "../../../fleuve/fleuve";
+import { Observable } from "../../../observable/observable";
 export var of = function (value) {
-    var fleuve$ = new Fleuve(value);
-    fleuve$.close();
-    fleuve$._isFinite = true;
-    return fleuve$;
+    var obs$ = new Observable(value);
+    obs$.close();
+    return obs$;
 };
