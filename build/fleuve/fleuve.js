@@ -6,12 +6,13 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from) {
 import { filterNonFunctions, isFunction } from "../helpers/function.helper";
 import { EventSubscription } from "../models/event";
 import { OperationResult, OperationResultFlag, } from "../models/operator";
-import { Subscriber, Subscription, } from "../models/subscription";
+import { isInstanceOfSubscriber, subscriberOf, Subscription, } from "../models/subscription";
 var Fleuve = /** @class */ (function () {
     function Fleuve(_innerValue) {
         this._innerValue = _innerValue;
         this._subscribers = [];
         this._preProcessOperations = [];
+        this._forkPipeline = [];
         this._isStarted = false;
         this._isComplete = false;
         this._forks$ = [];
@@ -28,63 +29,23 @@ var Fleuve = /** @class */ (function () {
         return new EventSubscription(elem, eventType, eventListener);
     };
     Fleuve.prototype.close = function () {
+        this._complete();
+        this.closeForks();
+        this._nextComplete();
+    };
+    Fleuve.prototype.closeForks = function () {
         this._forks$.forEach(function (fork$) {
-            fork$.close();
+            fork$.closeForks();
             fork$._complete();
             fork$._nextComplete();
         });
-    };
-    Fleuve.prototype.fork = function () {
-        var operators = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            operators[_i] = arguments[_i];
-        }
-        var fork$ = new Fleuve();
-        fork$._preProcessOperations = operators;
-        this.subscribe(function (value) {
-            try {
-                var operationResult = fork$._executeOperations(value, fork$._preProcessOperations);
-                if (operationResult.isMustStop()) {
-                    fork$._complete();
-                    fork$._nextComplete();
-                    return;
-                }
-                if (operationResult.isFilterNotMatched()) {
-                    return;
-                }
-                fork$.next(operationResult.value);
-            }
-            catch (err) {
-                fork$._error = err;
-                fork$._nextError();
-            }
-        }, function (err) { return (fork$._error = err); }, function () { return fork$._complete(); });
-        this._forks$.push(fork$);
-        return fork$;
-    };
-    Fleuve.prototype.next = function () {
-        var _this = this;
-        var events = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            events[_i] = arguments[_i];
-        }
-        if (this._isComplete || !!this._error) {
-            return this;
-        }
-        if ((this._isStarted = this._isStarted || arguments.length > 0)) {
-            events.forEach(function (event) {
-                _this._innerValue = event;
-                _this._callSubscribers.apply(_this, __spreadArray([event], _this._subscribers));
-            });
-        }
-        return this;
     };
     Fleuve.prototype.compile = function () {
         var operations = [];
         for (var _i = 0; _i < arguments.length; _i++) {
             operations[_i] = arguments[_i];
         }
-        if (this._isComplete || !!this._error) {
+        if (this._isFinite || this._isComplete || !!this._error) {
             return this;
         }
         try {
@@ -102,6 +63,65 @@ var Fleuve = /** @class */ (function () {
         catch (err) {
             this._error = err;
             this._nextError();
+            this.close();
+        }
+        return this;
+    };
+    Fleuve.prototype.fork = function () {
+        var operators = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            operators[_i] = arguments[_i];
+        }
+        var fork$ = new Fleuve();
+        fork$._forkPipeline = operators;
+        this.subscribe(function (value) {
+            if (!!fork$._error) {
+                return;
+            }
+            try {
+                var operationResult = fork$._executeOperations(value, fork$._forkPipeline);
+                if (operationResult.isMustStop()) {
+                    fork$._complete();
+                    fork$._nextComplete();
+                    return;
+                }
+                if (operationResult.isFilterNotMatched()) {
+                    return;
+                }
+                fork$.next(operationResult.value);
+            }
+            catch (err) {
+                fork$._error = err;
+                fork$._nextError();
+            }
+        }, function (err) {
+            fork$._error = err;
+            fork$._nextError();
+            fork$.close();
+        }, function () { return fork$._complete(); });
+        this._forks$.push(fork$);
+        return fork$;
+    };
+    Fleuve.prototype.next = function () {
+        var events = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            events[_i] = arguments[_i];
+        }
+        if (this._isFinite || this._isComplete || !!this._error || !(this._isStarted = this._isStarted || arguments.length > 0)) {
+            return this;
+        }
+        for (var i = 0; i < events.length; i++) {
+            var operationResult = this._executeOperations(events[i], this._preProcessOperations);
+            if (operationResult.isMustStop()) {
+                this._complete();
+                this._nextComplete();
+                break;
+            }
+            if (operationResult.isFilterNotMatched()) {
+                break;
+            }
+            this._innerValue = operationResult.value;
+            this._callSubscribers.apply(this, __spreadArray([operationResult.value], this._subscribers));
         }
         return this;
     };
@@ -111,8 +131,12 @@ var Fleuve = /** @class */ (function () {
             operations[_i] = arguments[_i];
         }
         var fleuve$ = new Fleuve();
-        if (!this._isStarted || !!this._error || this._isComplete) {
-            fleuve$._complete();
+        if (!!this._error) {
+            fleuve$._error = this._error;
+            fleuve$.close();
+            return fleuve$;
+        }
+        if (!this._isStarted) {
             return fleuve$;
         }
         try {
@@ -132,7 +156,7 @@ var Fleuve = /** @class */ (function () {
     };
     Fleuve.prototype.subscribe = function (onNext, onError, onComplete) {
         var _this = this;
-        if (!isFunction(onNext) && !Subscriber.isInstanceOfSubscriber(onNext)) {
+        if (!isFunction(onNext) && !isInstanceOfSubscriber(onNext)) {
             throw new Error("Please provide either a function or a Subscriber");
         }
         var subscriber = this._createSubscriber(onNext, onError, onComplete);
@@ -154,24 +178,24 @@ var Fleuve = /** @class */ (function () {
     };
     Fleuve.prototype._createSubscriber = function (onNext, onError, onComplete) {
         if (isFunction(onNext)) {
-            return Subscriber.of(function (value) { return onNext(value); }, (isFunction(onError) && onError) || undefined, (isFunction(onComplete) && onComplete) || undefined);
+            return subscriberOf(onNext, (isFunction(onError) && onError) || undefined, (isFunction(onComplete) && onComplete) || undefined);
         }
         return onNext;
     };
     Fleuve.prototype._doComplete = function (subscriber) {
         var _a;
-        if (this._isComplete) {
-            subscriber.onComplete((_a = this._error) !== null && _a !== void 0 ? _a : this._innerValue);
+        if (this._isComplete && subscriber.complete) {
+            subscriber.complete((_a = this._error) !== null && _a !== void 0 ? _a : this._innerValue);
         }
     };
     Fleuve.prototype._doError = function (subscriber) {
-        if (!this._isComplete && !!this._error) {
-            subscriber.onError(this._error);
+        if (!!this._error && subscriber.error) {
+            subscriber.error(this._error);
         }
     };
     Fleuve.prototype._doNext = function (subscriber) {
-        if (this._isStarted && !this._isComplete && !this._error) {
-            subscriber.onNext(this._innerValue);
+        if (this._isStarted && !this._error) {
+            subscriber.next(this._innerValue);
         }
     };
     Fleuve.prototype._callSubscribers = function (event) {
@@ -179,7 +203,7 @@ var Fleuve = /** @class */ (function () {
         for (var _i = 1; _i < arguments.length; _i++) {
             subscribers[_i - 1] = arguments[_i];
         }
-        subscribers.forEach(function (s) { return s.onNext(event); });
+        subscribers.forEach(function (s) { return s.next(event); });
     };
     Fleuve.prototype._computeValue = function (initValue) {
         var operations = [];

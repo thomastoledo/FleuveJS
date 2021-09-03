@@ -6,17 +6,13 @@ export declare class Subscription {
 interface UnsubscribeCallback {
     (): void;
 }
-export declare class Subscriber<T = any> {
-    private _onNext;
-    private _onError?;
-    private _onComplete?;
-    static isInstanceOfSubscriber(obj: any): obj is Subscriber;
-    static of<T>(onNext: OnNext<T>, onError?: OnError, onComplete?: OnComplete<T>): Subscriber<T>;
-    private constructor();
-    onNext(t: T): void;
-    onError(err: Error): void | undefined;
-    onComplete(value: T | Error | undefined): void | undefined;
+export interface Subscriber<T = any> {
+    next: OnNext<T>;
+    error?: OnError;
+    complete?: OnComplete<T>;
 }
+export declare function isInstanceOfSubscriber(obj: any): obj is Subscriber;
+export declare function subscriberOf<T>(next: OnNext<T>, error?: OnError, complete?: OnComplete<T>): Subscriber<T>;
 export interface OnNext<T> {
     (t: T): void;
 }

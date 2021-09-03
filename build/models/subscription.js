@@ -9,31 +9,13 @@ var Subscription = /** @class */ (function () {
     return Subscription;
 }());
 export { Subscription };
-var Subscriber = /** @class */ (function () {
-    function Subscriber(_onNext, _onError, _onComplete) {
-        this._onNext = _onNext;
-        this._onError = _onError;
-        this._onComplete = _onComplete;
+export function isInstanceOfSubscriber(obj) {
+    return isFunction(obj.next) && (obj.error === undefined || isFunction(obj.error)) && (obj.complete == undefined || isFunction(obj.complete));
+}
+export function subscriberOf(next, error, complete) {
+    if (!isInstanceOfSubscriber({ next: next, error: error, complete: complete })) {
+        throw new Error("Please provide functions for onNext, onError and onComplete");
     }
-    Subscriber.isInstanceOfSubscriber = function (obj) {
-        return obj instanceof Subscriber;
-    };
-    Subscriber.of = function (onNext, onError, onComplete) {
-        if (!isFunction(onNext) || (!!onError && !isFunction(onError)) || (!!onComplete && !isFunction(onComplete))) {
-            throw new Error("Please provide functions for onNext, onError and onComplete");
-        }
-        return new Subscriber(onNext, onError, onComplete);
-    };
-    Subscriber.prototype.onNext = function (t) {
-        return this._onNext(t);
-    };
-    Subscriber.prototype.onError = function (err) {
-        return this._onError && this._onError(err);
-    };
-    Subscriber.prototype.onComplete = function (value) {
-        return this._onComplete && this._onComplete(value);
-    };
-    return Subscriber;
-}());
-export { Subscriber };
+    return { next: next, error: error, complete: complete };
+}
 ;

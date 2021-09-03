@@ -1,6 +1,3 @@
-export interface Operator<T = any, U = any> {
-    (operatorFunction: OperatorFunction<T, U>): OperatorFunction<T, OperationResult<U>>;
-}
 export declare type OperatorFunction<T, U = never> = (source: T) => U;
 export declare class OperationResult<T> {
     private _value;
