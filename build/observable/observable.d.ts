@@ -15,7 +15,6 @@ export declare class Observable<T = never> {
      * @returns
      */
     addEventListener(selector: string, eventType: keyof HTMLElementEventMap, listener: Listener<T>, options?: AddEventListenerOptions): EventSubscription;
-    close(): void;
     pipe<U = any>(...operations: OperatorFunction<T, OperationResult<U>>[]): Observable<U>;
     subscribe(onNext: OnNext<T>, onError?: OnError, onComplete?: OnComplete): Subscription;
     subscribe(subscriber: Subscriber<T>): Subscription;

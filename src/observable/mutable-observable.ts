@@ -9,12 +9,15 @@ export class MutableObservable<T = never> extends Observable<T> {
 
   constructor(...initialSequence: T[]) {
     super(...initialSequence);
+    this._isComplete = false;
   }
 
   close(): void {
-    super.close();
+    this._complete();
+    this._triggerOnComplete();
     this.closeForks();
   }
+
 
   closeForks(): void {
     this._forks$.forEach((fork$) => {
@@ -39,18 +42,18 @@ export class MutableObservable<T = never> extends Observable<T> {
 
   fork(
     ...operators: OperatorFunction<T, OperationResult<any>>[]
-  ): Observable<T> {
+  ): MutableObservable<T> {
     const fork$: MutableObservable<T> = new MutableObservable();
     fork$._preProcessOperations = operators;
-
+    fork$._error = this._error;
     this.subscribe(
-      (value: T) => fork$.next(value),
+      (value: T) => {fork$.next(value)},
       (err) => {
         fork$._error = err;
         fork$._triggerOnError();
         fork$.close();
       },
-      () => fork$._complete()
+      () => fork$.close()
     );
 
     this._forks$.push(fork$);
@@ -72,7 +75,6 @@ export class MutableObservable<T = never> extends Observable<T> {
 
   private _buildNewSequence(events: T[], operations: OperatorFunction<T, any>[]): T[] {
     const newSequence = [];
-
     for (let i = 0; i < events.length; i++) {
       try {
         const operationResult = this._executeOperations(
@@ -81,7 +83,7 @@ export class MutableObservable<T = never> extends Observable<T> {
         );
   
         if (operationResult.isMustStop()) {
-          this._complete();
+          this.close();
           break;
         }
   
@@ -90,9 +92,10 @@ export class MutableObservable<T = never> extends Observable<T> {
         }
 
         newSequence.push(operationResult.value);        
-      } catch (error) {
+      } catch (error: any) {
         this._error = error;
-        this._complete();
+        this._triggerOnError();
+        this.close();
       }
 
     }

@@ -5,7 +5,5 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from) {
 };
 import { Observable } from "../../../observable/observable";
 export var from = function (values) {
-    var obs$ = new (Observable.bind.apply(Observable, __spreadArray([void 0], values)))();
-    obs$.close();
-    return obs$;
+    return new (Observable.bind.apply(Observable, __spreadArray([void 0], values)))();
 };

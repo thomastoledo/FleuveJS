@@ -14,7 +14,7 @@ var Observable = /** @class */ (function () {
             initialSequence[_i] = arguments[_i];
         }
         this._subscribers = [];
-        this._isComplete = false;
+        this._isComplete = true;
         this._error = null;
         this._innerSequence = initialSequence;
     }
@@ -33,10 +33,6 @@ var Observable = /** @class */ (function () {
         var eventListener = this._createEventListenerFromListener(listener);
         elem.addEventListener(eventType, eventListener, options);
         return new EventSubscription(elem, eventType, eventListener);
-    };
-    Observable.prototype.close = function () {
-        this._complete();
-        this._triggerOnComplete();
     };
     Observable.prototype.pipe = function () {
         var operations = [];
@@ -123,7 +119,7 @@ var Observable = /** @class */ (function () {
                     i = operations.length;
                     break;
                 case OperationResultFlag.UnwrapSwitch:
-                    res = new OperationResult(res.value._innerValue);
+                    res = new OperationResult(res.value._innerSequence.pop());
                     break;
                 default:
                     break;
@@ -134,7 +130,7 @@ var Observable = /** @class */ (function () {
     Observable.prototype._createEventListenerFromListener = function (listener) {
         var _this = this;
         return function (event) {
-            if (!_this._error && !_this._isComplete) {
+            if (!_this._error) {
                 _this._innerSequence.forEach(function (value) { return listener(value, event); });
             }
         };

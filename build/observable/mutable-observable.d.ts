@@ -11,7 +11,7 @@ export declare class MutableObservable<T = never> extends Observable<T> {
      * @returns
      */
     compile(...operations: OperatorFunction<T, OperationResult<any>>[]): this;
-    fork(...operators: OperatorFunction<T, OperationResult<any>>[]): Observable<T>;
+    fork(...operators: OperatorFunction<T, OperationResult<any>>[]): MutableObservable<T>;
     next(...events: T[]): this;
     private _buildNewSequence;
     private _triggerOnNext;

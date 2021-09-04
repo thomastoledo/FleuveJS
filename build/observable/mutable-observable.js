@@ -24,10 +24,12 @@ var MutableObservable = /** @class */ (function (_super) {
         var _this = _super.apply(this, initialSequence) || this;
         _this._forks$ = [];
         _this._preProcessOperations = [];
+        _this._isComplete = false;
         return _this;
     }
     MutableObservable.prototype.close = function () {
-        _super.prototype.close.call(this);
+        this._complete();
+        this._triggerOnComplete();
         this.closeForks();
     };
     MutableObservable.prototype.closeForks = function () {
@@ -60,11 +62,12 @@ var MutableObservable = /** @class */ (function (_super) {
         }
         var fork$ = new MutableObservable();
         fork$._preProcessOperations = operators;
-        this.subscribe(function (value) { return fork$.next(value); }, function (err) {
+        fork$._error = this._error;
+        this.subscribe(function (value) { fork$.next(value); }, function (err) {
             fork$._error = err;
             fork$._triggerOnError();
             fork$.close();
-        }, function () { return fork$._complete(); });
+        }, function () { return fork$.close(); });
         this._forks$.push(fork$);
         return fork$;
     };
@@ -88,7 +91,7 @@ var MutableObservable = /** @class */ (function (_super) {
             try {
                 var operationResult = this._executeOperations(events[i], operations);
                 if (operationResult.isMustStop()) {
-                    this._complete();
+                    this.close();
                     break;
                 }
                 if (operationResult.isFilterNotMatched()) {
@@ -98,7 +101,8 @@ var MutableObservable = /** @class */ (function (_super) {
             }
             catch (error) {
                 this._error = error;
-                this._complete();
+                this._triggerOnError();
+                this.close();
             }
         }
         return newSequence;

@@ -1,9 +1,10 @@
+import { MutableObservable } from "../observable/mutable-observable";
 import { Observable } from "../observable/observable";
 import { subscriberOf } from "./subscription";
 
 describe('Subscription', () => {
     it('unsubscribe - should unsubscribe from a Observable', () => {
-        const observable = new Observable();
+        const observable = new MutableObservable();
         const shouldNotBeCalled = jest.fn();
         const subscription = observable.subscribe(() => shouldNotBeCalled());
         subscription.unsubscribe();

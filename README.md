@@ -132,9 +132,19 @@ obs$.next(99); // the forks' subscribers won't be triggered
 This operator allows you to create an Observable from a single scalar value. It creates a finite Observable with one or multiple scalar values. Once created, the Observable is automatically complete.
 
 ```ts
-const obs$ = of(12);
+const obs$ = of(12, 13, 14);
 obs$.subscribe(subscriberOf((x) => console.log(x)))
 ```
+
+#### `from` - static
+*This operator is static: it means your cannot use it as a parameter for methods such as `pipe`, `compile` or `fork`*
+
+This operator works just like `of`, except it will take an array as a parameter, and flatten it.
+
+#### `mutable` - static
+*This operator is static: it means your cannot use it as a parameter for methods such as `pipe`, `compile` or `fork`*
+
+This operator works just like `of`, except it will return a `MutableObservable` instead of an `Observable`.
 
 #### `preProcess` - static
 *This operator is static: it means you cannot use it as a parameter for methods such as `pipe`, `compile` or `fork`*.
@@ -289,8 +299,7 @@ whenThrowing$(10, 0);
 ```
 
 ##### Creation
-- from: a finite Observable from a finite sequence
-- infinite: an infinite Observable
+- fromMutable: same as from, but for MutableObservables
 - compose: to compose finite and infinite Observable creators
 
 ##### Asynchronous

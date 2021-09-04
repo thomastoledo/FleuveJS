@@ -7,8 +7,7 @@ describe('onEvent', () => {
 
         document.body.appendChild(button);
         const obs$ = onEvent(button, 'click');
-        obs$.subscribe(() => {
-
-        });
+        obs$.subscribe((event) => {expect(event).toBeTruthy()});
+        button.click();
     });
 });

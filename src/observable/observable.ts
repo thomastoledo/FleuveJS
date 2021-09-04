@@ -19,7 +19,7 @@ export class Observable<T = never> {
   protected _innerSequence: T[];
   protected _subscribers: Subscriber<T>[] = [];
 
-  protected _isComplete: boolean = false;
+  protected _isComplete: boolean = true;
   protected _error: Error | null = null;
 
   constructor(...initialSequence: T[]) {
@@ -53,11 +53,6 @@ export class Observable<T = never> {
     return new EventSubscription(elem, eventType, eventListener);
   }
 
-  close(): void {
-    this._complete();
-    this._triggerOnComplete();
-  }
-
   pipe<U = any>(
     ...operations: OperatorFunction<T, OperationResult<U>>[]
   ): Observable<U> {
@@ -79,7 +74,7 @@ export class Observable<T = never> {
         }
 
         newSequence.push(operationResult.value);
-      } catch (error) {
+      } catch (error: any) {
         obs$._error = error;
         obs$._complete();
         return obs$;
@@ -175,7 +170,7 @@ export class Observable<T = never> {
           i = operations.length;
           break;
         case OperationResultFlag.UnwrapSwitch:
-          res = new OperationResult(res.value._innerValue);
+          res = new OperationResult(res.value._innerSequence.pop());
           break;
         default:
           break;
@@ -188,7 +183,7 @@ export class Observable<T = never> {
     listener: Listener<T>
   ): EventListener {
     return (event: Event) => {
-      if (!this._error && !this._isComplete) {
+      if (!this._error) {
         this._innerSequence.forEach(value => listener(value, event));
       }
     };

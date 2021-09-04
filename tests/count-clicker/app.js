@@ -1,6 +1,6 @@
-import { Observable } from '../../bundle/observable.bundle.js';
+import { MutableObservable } from '../../bundle/observable.bundle.js';
 
-const counter$ = new Observable(0);
+const counter$ = new MutableObservable(0);
 const counter = document.getElementById('counter');
 
 counter$.subscribe((count) => {
