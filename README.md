@@ -31,7 +31,12 @@ Or, if you'd prefer to work on a vanilla project:
 import { Observable } from 'https://unpkg.com/observablejs@latest/bundle/observable.bundle.js';
 ```
 
-## How To Use
+## Observables and MutableObservables
+
+`Observables` are objects containing an inner sequence. Their sequence is finite, and they are immutable.
+`MutableObservables` are objects containing an inner sequence too, except this one can be mutated over time. It is infinite, and can be completed with the `.close()` method.
+
+## How To Use Observables
 
 ### Instantiate an Observable
 
@@ -39,20 +44,6 @@ import { Observable } from 'https://unpkg.com/observablejs@latest/bundle/observa
 ```ts
 const johnDoe$ = new Observable({firstname: 'john', lastname: 'doe'});
 const counter$ = new Observable(0);
-```
-
-### Provide new values with `next` and `compile`
-```ts
-const obs$ = new Observable(0);
-obs$.next(12, 13, 14, 15, 16); // obs$ inner value will go from 12 to 16
-obs$.compile(map((x) => x + 1), map((x) => x * 2)); // obs$ inner value will go from 16 to 17, then from 17 to 34
-```
-
-### Close a observable with `close`
-
-```ts
-const obs$ = new Observable(0);
-obs$.close();
 ```
 
 ### Pipe the Observable
@@ -65,7 +56,6 @@ const sum$ = obs$.pipe(
     map((numbers) => numbers.reduce((acc, curr) => acc + curr, 0))
 );
 ```
-
 ### Subscribe
 ```ts
 const obs$ = new Observable(12);
@@ -98,30 +88,48 @@ const eventSubscription = obs$.addEventListener('#clickMe', 'click', (x, event) 
 eventSubscription.unsubscribe();
 ```
 
-### `fork` the Observable
-*Warning: might become a static operator rather than a method of the Observable class*
+## How To Use MutableObservables
 
-You can fork an Observable. The new Observable will still be connected to the original Observable, but with some pre-processing operations.
+`MutableObservable` simply extends `Observable`. All of the previous sections also apply to `MutableObservable`.
+
+### Provide new values with `next` and `compile`
+```ts
+const obs$ = new MutableObservable(0);
+obs$.next(12, 13, 14, 15, 16); // obs$ inner sequence will now be [ 12, 13, 14, 15, 16 ]
+obs$.compile(map((x) => x + 1), map((x) => x * 2)); // obs$ inner sequence will will now be [ 26, 28, 30, 32, 34 ]
+```
+
+### Close a MutableObservable with `close`
 
 ```ts
-const obs$ = new Observable(12);
+const obs$ = new MutableObservable(0);
+obs$.close();
+```
+
+### `fork` the MutableObservable
+You can fork a MutableObservable. The new MutableObservable will still be connected to the original MutableObservable, but with some pre-processing operations.
+
+```ts
+const obs$ = new MutableObservable(12);
 const forked$ = obs$.fork(filter(x => x > 15));
 forked$.subscribe(x => console.log(x)); // nothing would happen at first
 obs$.next(20); // now, 20 would be printed in the browser's console
 ```
 
-### You can stop an Observable's forks with the `closeForks` method
+### You can stop a MutableObservable's forks with the `closeForks` method
 No more values will be allowed and the forks will be flagged as complete.
 
 ```ts
-const obs$ = new Observable(12);
+const obs$ = new MutableObservable(12);
 const fork1$ = obs$.fork(map(x => x * 2));
-const fork2$ = fork1$.fork(filter(x => x < 100));
+const fork2$ = fork1$.fork(filter(x => x > 100));
 
-obs$.closeForks();
-fork1$.subscribe(x => console.log('fork1$ value', x)); // will display "24"
-fork2$.subscribe(x => console.log('fork2$ value', x)); // will display "24"
+const subscriber = subscriberOf({next: x => console.log('fork1$ value', x), complete: () => console.log('fork1 complete')});
+fork1$.subscribe(subscriber); // will display "24"
 
+fork2$.subscribe(x => console.log('fork2$ value', x)); // will display nothing
+
+obs$.closeForks(); // will trigger fork1$'s complete callback
 obs$.next(99); // the forks' subscribers won't be triggered
 ```
 
@@ -129,11 +137,11 @@ obs$.next(99); // the forks' subscribers won't be triggered
 #### `of` - static
 *This operator is static: it means you cannot use it as a parameter for methods such as `pipe`, `compile` or `fork`.*
 
-This operator allows you to create an Observable from a single scalar value. It creates a finite Observable with one or multiple scalar values. Once created, the Observable is automatically complete.
+This operator allows you to create an Observable from discrete values. It creates a finite Observable. Once created, the Observable is automatically complete.
 
 ```ts
 const obs$ = of(12, 13, 14);
-obs$.subscribe(subscriberOf((x) => console.log(x)))
+obs$.subscribe(subscriberOf((x) => console.log(x))); // will display "12", "13", "14"
 ```
 
 #### `from` - static
@@ -146,12 +154,17 @@ This operator works just like `of`, except it will take an array as a parameter,
 
 This operator works just like `of`, except it will return a `MutableObservable` instead of an `Observable`.
 
+#### `mutableFrom` - static
+*This operator is static: it means your cannot use it as a parameter for methods such as `pipe`, `compile` or `fork`*
+
+This operator works just like `from`, except it will return a `MutableObservable` instead of an `Observable`.
+
 #### `preProcess` - static
 *This operator is static: it means you cannot use it as a parameter for methods such as `pipe`, `compile` or `fork`*.
 
-This operator allows you to create an Observable bearing pre-processing operations. Those operations will execute every time you provide a new value to the Observable.
+This operator allows you to create a MutableObservable bearing pre-processing operations. Those operations will execute every time you provide a new value to the MutableObservable.
 
-It is useful if you want to connect to a source of data, and only retrieve those which match a predicate.
+It is useful if you want to connect to a source of data, and only retrieve those that match a predicate.
 
 In the following example, we assume we want to retrieve some stats about temperatures, and we would like to only retrieve entries where the temperature is > 30°C;
 
@@ -187,11 +200,9 @@ obs$.pipe(switchmap((x) => {
 #### `filter`
 
 ```ts
-const obs$ = new Observable(12);
+const obs$ = new Observable(12, 0, -1, 100);
 const filtered$ = obs$.pipe(filter(x => x > 10));
 filtered$.subscribe((value) => console.log(value)); // will display "12" and "100"
-filtered$.next(0);
-filtered$.next(100); 
 ```
 #### `until`
 
@@ -299,7 +310,6 @@ whenThrowing$(10, 0);
 ```
 
 ##### Creation
-- fromMutable: same as from, but for MutableObservables
 - compose: to compose finite and infinite Observable creators
 
 ##### Asynchronous
