@@ -6,7 +6,7 @@ module.exports = {
     entry: "./src/index.ts",
     target: "web",
     output: {
-        filename: "fleuve.bundle.js",
+        filename: "observable.bundle.js",
         path: path.resolve(__dirname, "bundle"),
         library: {
             type: "module",

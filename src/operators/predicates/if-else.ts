@@ -1,4 +1,4 @@
-import { Fleuve } from "../../fleuve/fleuve";
+import { Observable } from "../../observable/observable";
 import {
   OperatorFunction,
   OperationResult,
@@ -11,7 +11,7 @@ export const ifElse = function <T = any, U = any>(
   predicate: OperatorFunction<T, boolean>,
   ifs: OperatorFunction<T, OperationResult<U>>[],
   elses?: OperatorFunction<T, OperationResult<U>>[]
-): OperatorFunction<T, OperationResult<Fleuve<U>>> {
+): OperatorFunction<T, OperationResult<Observable<U>>> {
   return (source: T) => {
     const operationResult = filter(predicate)(source);
     return new OperationResult(

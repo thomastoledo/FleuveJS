@@ -1,13 +1,14 @@
-import { Fleuve } from "../fleuve/fleuve";
+import { MutableObservable } from "../observable/mutable-observable";
+import { Observable } from "../observable/observable";
 import { subscriberOf } from "./subscription";
 
 describe('Subscription', () => {
-    it('unsubscribe - should unsubscribe from a Fleuve', () => {
-        const fleuve = new Fleuve();
+    it('unsubscribe - should unsubscribe from a Observable', () => {
+        const observable = new MutableObservable();
         const shouldNotBeCalled = jest.fn();
-        const subscription = fleuve.subscribe(() => shouldNotBeCalled());
+        const subscription = observable.subscribe(() => shouldNotBeCalled());
         subscription.unsubscribe();
-        fleuve.next();
+        observable.next();
         expect(shouldNotBeCalled).not.toHaveBeenCalled();
     });
 

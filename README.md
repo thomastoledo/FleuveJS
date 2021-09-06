@@ -1,96 +1,86 @@
-# FleuveJS
+# ObservableJS
 
-![logo](https://github.com/nugetchar/FleuveJS/blob/main/logo.png)
+![logo](https://github.com/nugetchar/ObservableJS/blob/main/logo.png)
 
 A simple Observable Utility library.
 
 ## Why?
-Fleuve is called that way because of the philosophy behind: every Fleuve is a data stream, potentially infinite.
-You can add your own data to the Fleuve, and everyone on the Fleuve will be notified.
+Observable is called that way because of the philosophy behind: every Observable is a data stream, potentially infinite.
+You can add your own data to the Observable, and everyone on the Observable will be notified.
 
-You can also add some pipeline to the Fleuve, so what you receive has been processed in a convenient way before.
+You can also add some pipeline to the Observable, so what you receive has been processed in a convenient way before.
 
-You can bind a Fleuve behavior to the user's behavior.
+You can bind an Observable behavior to the user's behavior.
 
-A Fleuve can be forked into multiple other Fleuves: each Fleuve child will dispatch some data everytime their parent dispatch some data. You can also close your stream of data, and everyone will know the Fleuve is complete.
+A Observable can be forked into multiple other Observables: each Observable child will dispatch some data everytime their parent dispatch some data. You can also close your stream of data, and everyone will know the Observable is complete.
 
 In short:
 - potentially infinite source of data;
-- cascading Fleuves by forking a data stream;
+- cascading Observables by forking a data stream;
 - data pre-processing;
 - aims to allow practically anything as a source of data: a function execution, a user's action, a scalar value, a websocket...
 
 Any contribution and / or feedback is welcomed!
 
 ## Installation
-`npm i fleuvejs`
+`npm i observablejs`
 
 Or, if you'd prefer to work on a vanilla project:
 
 ```js
-import { Fleuve } from 'https://unpkg.com/browse/fleuvejs@latest/bundle/fleuve.bundle.js';
+import { Observable } from 'https://unpkg.com/observablejs@latest/bundle/observable.bundle.js';
 ```
 
-## How To Use
+## Observables and MutableObservables
 
-### Instantiate a Fleuve
+`Observables` are objects containing an inner sequence. Their sequence is finite, and they are immutable.
+`MutableObservables` are objects containing an inner sequence too, except this one can be mutated over time. It is infinite, and can be completed with the `.close()` method.
 
-*Warning: soon to be deprecated in favor of static operators `of` and `from`*
+## How To Use Observables
+
+### Instantiate an Observable
+
+*Warning: soon to be deprecated in favor of static operators*
 ```ts
-const johnDoe$ = new Fleuve({firstname: 'john', lastname: 'doe'});
-const counter$ = new Fleuve(0);
+const johnDoe$ = new Observable({firstname: 'john', lastname: 'doe'});
+const counter$ = new Observable(0);
 ```
 
-### Provide new values with `next` and `compile`
-```ts
-const fleuve$ = new Fleuve(0);
-fleuve$.next(12, 13, 14, 15, 16); // fleuve$ inner value will go from 12 to 16
-fleuve$.compile(map((x) => x + 1), map((x) => x * 2)); // fleuve$ inner value will go from 16 to 17, then from 17 to 34
-```
-
-### Close a fleuve with `close`
+### Pipe the Observable
+You can create a new Observable with the `pipe` method.
 
 ```ts
-const fleuve$ = new Fleuve(0);
-fleuve$.close();
-```
-
-### Pipe the Fleuve
-You can create a new Fleuve with the `pipe` method.
-
-```ts
-const fleuve$ = new Fleuve(18729);
-const sum$ = fleuve$.pipe(
+const obs$ = new Observable(18729);
+const sum$ = obs$.pipe(
     map((x) => (x + '').split('')), 
     map((numbers) => numbers.reduce((acc, curr) => acc + curr, 0))
 );
 ```
-
 ### Subscribe
 ```ts
-const fleuve$ = new Fleuve(12);
-fleuve$.subscribe((value) => console.log(value), (err) => console.error(err), () => console.log('fleuve complete'));
+const obs$ = new Observable(12);
+obs$.subscribe((value) => console.log(value), (err) => console.error(err), () => console.log('observable complete'));
 
-const empty$ = new Fleuve();
+const empty$ = new Observable();
 empty$.subscribe((value) => console.log(value)); // will never execute;
 
 // This one will throw an error
-fleuve$.subscribe(42);
+obs$.subscribe(42);
 
 // You can as well create a Subscriber object
-fleuve$.subscribe(subscriberOf((x) => console.log(x)));
+obs$.subscribe(subscriberOf((x) => console.log(x)));
 
 ```
 ### Add an event listener
-You can bind users interactions to a Fleuve.
+You can bind users interactions to an Observable.
 
 ```html
 <button id="clickMe">Click Me</button>
 ```
 
 ```js
-const fleuve$ = new Fleuve();
-const eventSubscription = fleuve$.addEventListener('#clickMe', 'click', (x, event) => console.log(x, event))
+const obs$ = new Observable();
+const eventSubscription = obs$.addEventListener('#clickMe', 'click', (x, event) => console.log(x, event))
 ```
 
 ### Remove an event listener
@@ -98,78 +88,111 @@ const eventSubscription = fleuve$.addEventListener('#clickMe', 'click', (x, even
 eventSubscription.unsubscribe();
 ```
 
-### `fork` the Fleuve
-*Warning: might become a static operator rather than a method of the Fleuve class*
+## How To Use MutableObservables
 
-You can fork a Fleuve. The new Fleuve will still be connected to the original Fleuve, but with some pre-processing operations.
+`MutableObservable` simply extends `Observable`. All of the previous sections also apply to `MutableObservable`.
 
+### Provide new values with `next` and `compile`
 ```ts
-const fleuve$ = new Fleuve(12);
-const forked$ = fleuve$.fork(filter(x => x > 15));
-forked$.subscribe(x => console.log(x)); // nothing would happen at first
-fleuve$.next(20); // now, 20 would be printed in the browser's console
+const obs$ = new MutableObservable(0);
+obs$.next(12, 13, 14, 15, 16); // obs$ inner sequence will now be [ 12, 13, 14, 15, 16 ]
+obs$.compile(map((x) => x + 1), map((x) => x * 2)); // obs$ inner sequence will will now be [ 26, 28, 30, 32, 34 ]
 ```
 
-### You can stop a Fleuve's forks with the `closeForks` method
+### Close a MutableObservable with `close`
+
+```ts
+const obs$ = new MutableObservable(0);
+obs$.close();
+```
+
+### `fork` the MutableObservable
+You can fork a MutableObservable. The new MutableObservable will still be connected to the original MutableObservable, but with some pre-processing operations.
+
+```ts
+const obs$ = new MutableObservable(12);
+const forked$ = obs$.fork(filter(x => x > 15));
+forked$.subscribe(x => console.log(x)); // nothing would happen at first
+obs$.next(20); // now, 20 would be printed in the browser's console
+```
+
+### You can stop a MutableObservable's forks with the `closeForks` method
 No more values will be allowed and the forks will be flagged as complete.
 
 ```ts
-const fleuve$ = new Fleuve(12);
-const fork1$ = fleuve$.fork(map(x => x * 2));
-const fork2$ = fork1$.fork(filter(x => x < 100));
+const obs$ = new MutableObservable(12);
+const fork1$ = obs$.fork(map(x => x * 2));
+const fork2$ = fork1$.fork(filter(x => x > 100));
 
-fleuve$.closeForks();
-fork1$.subscribe(x => console.log('fork1$ value', x)); // will display "24"
-fork2$.subscribe(x => console.log('fork2$ value', x)); // will display "24"
+const subscriber = subscriberOf({next: x => console.log('fork1$ value', x), complete: () => console.log('fork1 complete')});
+fork1$.subscribe(subscriber); // will display "24"
 
-fleuve$.next(99); // the forks' subscribers won't be triggered
+fork2$.subscribe(x => console.log('fork2$ value', x)); // will display nothing
+
+obs$.closeForks(); // will trigger fork1$'s complete callback
+obs$.next(99); // the forks' subscribers won't be triggered
 ```
 
 ### Operators
 #### `of` - static
 *This operator is static: it means you cannot use it as a parameter for methods such as `pipe`, `compile` or `fork`.*
 
-This operator allows you to create a Fleuve from a single scalar value. It creates a finite Fleuve with one or multiple scalar values. Once created, the Fleuve is automatically complete.
+This operator allows you to create an Observable from discrete values. It creates a finite Observable. Once created, the Observable is automatically complete.
 
 ```ts
-const fleuve$ = of(12);
-fleuve$.subscribe(subscriberOf((x) => console.log(x)))
+const obs$ = of(12, 13, 14);
+obs$.subscribe(subscriberOf((x) => console.log(x))); // will display "12", "13", "14"
 ```
+
+#### `from` - static
+*This operator is static: it means your cannot use it as a parameter for methods such as `pipe`, `compile` or `fork`*
+
+This operator works just like `of`, except it will take an array as a parameter, and flatten it.
+
+#### `mutable` - static
+*This operator is static: it means your cannot use it as a parameter for methods such as `pipe`, `compile` or `fork`*
+
+This operator works just like `of`, except it will return a `MutableObservable` instead of an `Observable`.
+
+#### `mutableFrom` - static
+*This operator is static: it means your cannot use it as a parameter for methods such as `pipe`, `compile` or `fork`*
+
+This operator works just like `from`, except it will return a `MutableObservable` instead of an `Observable`.
 
 #### `preProcess` - static
 *This operator is static: it means you cannot use it as a parameter for methods such as `pipe`, `compile` or `fork`*.
 
-This operator allows you to create a Fleuve bearing pre-processing operations. Those operations will execute every time you provide a new value to the Fleuve.
+This operator allows you to create a MutableObservable bearing pre-processing operations. Those operations will execute every time you provide a new value to the MutableObservable.
 
-It is useful if you want to connect to a source of data, and only retrieve those which match a predicate.
+It is useful if you want to connect to a source of data, and only retrieve those that match a predicate.
 
 In the following example, we assume we want to retrieve some stats about temperatures, and we would like to only retrieve entries where the temperature is > 30°C;
 
 ```ts
-const fleuve$ = preProcess(filter(stat => stat.temp > 30));
+const obs$ = preProcess(filter(stat => stat.temp > 30));
 
 // displayStat is an arbitrary function we would have to implement
-fleuve$.subscribe(stat => displayStat(stat));
+obs$.subscribe(stat => displayStat(stat));
 
 fetch('someUrl')
     .then(res => res.json())
-    .then(stats => fleuve$.next(...stats));
+    .then(stats => obs$.next(...stats));
 ```
 
 #### `map`
 
 ```ts
-const fleuve$ = new Fleuve(12);
-fleuve$.pipe(map(x => x * 2)).subscribe((value) => console.log(value)); // will display "24"
+const obs$ = new Observable(12);
+obs$.pipe(map(x => x * 2)).subscribe((value) => console.log(value)); // will display "24"
 ```
 
 #### `switchmap`
 
 ```ts
-const fleuve$ = new Fleuve(12);
-fleuve$.pipe(switchmap((x) => {
+const obs$ = new Observable(12);
+obs$.pipe(switchmap((x) => {
     if (x > 0) {
-        return new Fleuve(0);
+        return new Observable(0);
     }
 }));
 ```
@@ -177,54 +200,52 @@ fleuve$.pipe(switchmap((x) => {
 #### `filter`
 
 ```ts
-const fleuve$ = new Fleuve(12);
-const filtered$ = fleuve$.pipe(filter(x => x > 10));
+const obs$ = new Observable(12, 0, -1, 100);
+const filtered$ = obs$.pipe(filter(x => x > 10));
 filtered$.subscribe((value) => console.log(value)); // will display "12" and "100"
-filtered$.next(0);
-filtered$.next(100); 
 ```
 #### `until`
 
 ```ts
-const fleuve$ = preProcess(until(x => x >= 10));
-fleuve$.subscribe((value) => console.log(value)); // will display 0, 1, ..., 9
+const obs$ = preProcess(until(x => x >= 10));
+obs$.subscribe((value) => console.log(value)); // will display 0, 1, ..., 9
 
 for(let i = 0; i < 11; i++) {
-    fleuve$.next(i);
+    obs$.next(i);
 }
 ```
 
 #### `asLongAs`
 ```ts
-const fleuve$ = preProcess(asLongAs(x => x < 10));
-fleuve$.subscribe((value) => console.log(value)); // will display 0, 1, ..., 9
+const obs$ = preProcess(asLongAs(x => x < 10));
+obs$.subscribe((value) => console.log(value)); // will display 0, 1, ..., 9
 
 for(let i = 0; i < 11; i++) {
-    fleuve$.next(i);
+    obs$.next(i);
 }
 ```
 
 #### `ifElse`
-The `ifElse` operator is pretty useful when it comes to add branches to a Fleuve. it can be used either on a `pipe`, `compile`, `fork` method or on a *creation operator* such as `preProcess`.
+The `ifElse` operator is pretty useful when it comes to add branches to an Observable. it can be used either on a `pipe`, `compile`, `fork` method or on a *creation operator* such as `preProcess`.
 
 If the next example, we want to sort out some data and apply a different process according to each value. Values over 30 will trigger logging treatment, while others will just trigger an API call.
 
 ```ts
 const temperatures = [-15, 0, 12, 16, 30, 35, 45, -8];
-const fleuve$ = preProcess(
+const obs$ = preProcess(
     ifElse((x) => x > 30, 
             [tap((x) => logError(`Unexpected value: ${x}`))], 
             [tap((x) => saveTemp(x))])
     );
-fleuve$.next(...temperatures);
+obs$.next(...temperatures);
 ```
 
 #### `tap`
 The `tap` operator is useful when it comes to trigger a treatment that won't affect the outcome of the `pipe` / `compile` / `fork` operation.
 
 ```ts
-const fleuve$ = of(12);
-const piped$ = fleuve$.pipe(tap(x => console.log(x), map(x => x * 2))); // expected to print 12
+const obs$ = of(12);
+const piped$ = obs$.pipe(tap(x => console.log(x), map(x => x * 2))); // expected to print 12
 piped$.subscribe((x) => console.log(x)); // expected to print 24
 ```
 
@@ -289,10 +310,7 @@ whenThrowing$(10, 0);
 ```
 
 ##### Creation
-- from: a finite Fleuve from a finite sequence
-- preProcess: an infinite Fleuve with zero or multiple pre-processing operations
-- infinite: an infinite Fleuve
-- compose: to compose finite and infinite Fleuve creators
+- compose: to compose finite and infinite Observable creators
 
 ##### Asynchronous
 - websocket

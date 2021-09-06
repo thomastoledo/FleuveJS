@@ -1,8 +1,5 @@
-import { Fleuve } from "../../../fleuve/fleuve";
+import { Observable } from "../../../observable/observable";
 
-export const of = function<T>(value: T): Fleuve<T> {
-    const fleuve$ = new Fleuve(value);
-    fleuve$.close();
-    (fleuve$ as any)._isFinite = true;
-    return fleuve$;
+export const of = function<T = never>(...values: T[]): Observable<T> {
+    return new Observable(...values);
 }

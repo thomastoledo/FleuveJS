@@ -9,17 +9,17 @@ interface UnsubscribeCallback {
 export interface Subscriber<T = any> {
     next: OnNext<T>;
     error?: OnError;
-    complete?: OnComplete<T>;
+    complete?: OnComplete;
 }
 export declare function isInstanceOfSubscriber(obj: any): obj is Subscriber;
-export declare function subscriberOf<T>(next: OnNext<T>, error?: OnError, complete?: OnComplete<T>): Subscriber<T>;
+export declare function subscriberOf<T>(next: OnNext<T>, error?: OnError, complete?: OnComplete): Subscriber<T>;
 export interface OnNext<T> {
     (t: T): void;
 }
 export interface OnError {
     (err: Error): void;
 }
-export interface OnComplete<T> {
-    (result: T | Error | undefined): void;
+export interface OnComplete {
+    (): void;
 }
 export {};
