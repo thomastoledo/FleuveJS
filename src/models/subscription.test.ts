@@ -3,6 +3,8 @@ import { Observable } from "../observable/observable";
 import { subscriberOf } from "./subscription";
 
 describe('Subscription', () => {
+
+    it('will succeed', () => expect(true).toBe(true));
     it('unsubscribe - should unsubscribe from a Observable', () => {
         const observable = new MutableObservable();
         const shouldNotBeCalled = jest.fn();
@@ -17,7 +19,7 @@ describe('Subscription', () => {
         try {
             subscriberOf(5 as any);
         } catch(err) {
-            expect(err).toEqual(new Error(`Please provide functions for onNext, onError and onComplete`));
+            expect(err).toEqual(new Error(`Please provide functions for next, error and complete`));
         }
     });
 });

@@ -1,5 +1,4 @@
 import { filterNonFunctions, isFunction } from "../helpers/function.helper";
-import { Listener, EventSubscription } from "../models/event";
 import {
   OperationResult,
   OperationResultFlag,
@@ -16,41 +15,43 @@ import {
 } from "../models/subscription";
 
 export class Observable<T = never> {
-  protected _innerSequence: T[];
+  //   for (let i = 0; i < operations.length; i++) {
+  //     res = operations[i](res.value);
+  //     switch (res.flag) {
+  //       case OperationResultFlag.FilterNotMatched:
+  //       case OperationResultFlag.MustStop:
+  //         i = operations.length;
+  //         break;
+  //       case OperationResultFlag.UnwrapSwitch:
+  //         res = new OperationResult(res.value._innerSequence.pop());
+  //         break;
+  //       default:
+  //         break;
+  //     }
+  //   }
+  //   return res;
+  // }
+  // protected _executeOperations<T, U = any>(
+  //   value: T,
+  //   operators: OperatorFunction<T, OperationResult<U>>[]
+  // ): OperationResult<U> {
+  //   const computedValue = this._computeValue(
+  //     value as T,
+  //     ...(filterNonFunctions(...operators) as OperatorFunction<
+  //       T,
+  //       OperationResult<U>
+  //     >[])
+  //   );
+  //   return computedValue;
+  // }
+
+  protected _innerSequence: OperationResult<T>[];
   protected _subscribers: Subscriber<T>[] = [];
 
-  protected _isComplete: boolean = true;
-  protected _error: Error | null = null;
-
   constructor(...initialSequence: T[]) {
-    this._innerSequence = initialSequence;
-  }
-
-  /**
-   * @param selector
-   * @param eventType 
-   * @param listener 
-   * @param options 
-   * @returns 
-   */
-  addEventListener(
-    selector: string,
-    eventType: keyof HTMLElementEventMap,
-    listener: Listener<T>,
-    options?: AddEventListenerOptions
-  ): EventSubscription {
-    const elem = document.querySelector(selector);
-
-    if (!elem) {
-      throw new Error(`Could not find any element with selector "${selector}"`);
-    }
-
-    const eventListener: EventListener =
-      this._createEventListenerFromListener(listener);
-
-    elem.addEventListener(eventType, eventListener, options);
-
-    return new EventSubscription(elem, eventType, eventListener);
+    this._innerSequence = initialSequence.map(
+      (value) => new OperationResult(value)
+    );
   }
 
   pipe<U = any>(
@@ -58,59 +59,36 @@ export class Observable<T = never> {
   ): Observable<U> {
     const obs$ = new Observable<U>();
 
-    if (!!this._error) {
-      obs$._error = this._error;
-      obs$._complete();
-      return obs$;
-    }
+    const newSequence: OperationResult<U>[] = [];
+    for (
+      let i = 0, l = this._innerSequence.length;
+      i < l && !this._innerSequence[i].isMustStop();
+      i++
+    ) {
 
-    const newSequence = [];
-    for (let i = 0; i < this._innerSequence.length; i++) {
-      try {
-        const operationResult = this._executeOperations(this._innerSequence[i], operations);
-        if (operationResult.isMustStop() || operationResult.isFilterNotMatched()) {
-          obs$._complete();
-          return obs$;
-        }
+      const operationResult = this._executeOperations(
+        this._innerSequence[i].value,
+        operations
+      );
 
-        newSequence.push(operationResult.value);
-      } catch (error: any) {
-        obs$._error = error;
-        obs$._complete();
-        return obs$;
+      if (!operationResult.isFilterNotMatched()) {
+        newSequence.push(operationResult);
       }
-
     }
     obs$._innerSequence = newSequence;
     return obs$;
   }
 
-  subscribe(
-    onNext: OnNext<T>,
-    onError?: OnError,
-    onComplete?: OnComplete
-  ): Subscription;
-  subscribe(subscriber: Subscriber<T>): Subscription;
-  subscribe(
-    onNext: OnNext<T> | Subscriber<T>,
-    onError?: OnError,
-    onComplete?: OnComplete
-  ): Subscription {
-    if (!isFunction(onNext) && !isInstanceOfSubscriber(onNext)) {
+  subscribe(subscriber: OnNext<T> | Subscriber<T>): Subscription {
+    if (!isFunction(subscriber) && !isInstanceOfSubscriber(subscriber)) {
       throw new Error("Please provide either a function or a Subscriber");
     }
 
-    let subscriber: Subscriber<T> = this._createSubscriber(
-      onNext,
-      onError,
-      onComplete
-    );
-
-    this._doNext(subscriber);
-    this._doError(subscriber);
-    this._doComplete(subscriber);
-
-    this._subscribers.push(subscriber);
+    let _subscriber: Subscriber<T> = !isInstanceOfSubscriber(subscriber)
+      ? subscriberOf(subscriber)
+      : subscriber;
+    this._subscribers.push(_subscriber);
+    this.executeSubscriber(_subscriber, this._innerSequence);
 
     return new Subscription(
       () =>
@@ -118,54 +96,39 @@ export class Observable<T = never> {
     );
   }
 
-  protected _triggerOnError() {
-    this._subscribers.forEach((s) => this._doError(s));
-  }
+  private executeSubscriber(
+    _subscriber: Subscriber<T>,
+    sequence: OperationResult<T>[]
+  ): void {
+    for (let i = 0, l = sequence.length; i < l; i++) {
+      let operationResult = sequence[i];
 
-  protected _triggerOnComplete() {
-    this._subscribers.forEach((s) => this._doComplete(s));
-  }
+      if (operationResult.isOperationError()) {
+        (_subscriber.error &&
+          _subscriber.error(operationResult.error as Error)) ||
+          (() => {
+            throw operationResult.error;
+          })();
+        break;
+      }
 
-  private _createSubscriber(
-    onNext: OnNext<T> | Subscriber<T>,
-    onError?: OnError,
-    onComplete?: OnComplete
-  ): Subscriber<T> {
-    if (isFunction(onNext)) {
-      return subscriberOf(
-        onNext,
-        (isFunction(onError) && onError) || undefined,
-        (isFunction(onComplete) && onComplete) || undefined
-      );
+      operationResult = OperationResult.unwrap(operationResult);
+      _subscriber.next && _subscriber.next(operationResult.value);
     }
-    return onNext;
+    _subscriber.complete && _subscriber.complete();
   }
 
-  private _doComplete(subscriber: Subscriber<T>) {
-    if (this._isComplete && subscriber.complete) {
-      subscriber.complete();
-    }
-  }
-
-  private _doError(subscriber: Subscriber<T>) {
-    if (!!this._error && subscriber.error) {
-      subscriber.error(this._error);
-    }
-  }
-
-  private _doNext(subscriber: Subscriber<T>) {
-    this._innerSequence.forEach(value => subscriber.next(value));
-  }
-
-  private _computeValue(
+  private _computeValue<T>(
     initValue: T,
     ...operations: OperatorFunction<T, OperationResult<any>>[]
   ): OperationResult<any> {
     let res: OperationResult<any> = new OperationResult(initValue);
     for (let i = 0; i < operations.length; i++) {
+      const oldRes = res;
       res = operations[i](res.value);
       switch (res.flag) {
         case OperationResultFlag.FilterNotMatched:
+          // res = oldRes;
         case OperationResultFlag.MustStop:
           i = operations.length;
           break;
@@ -179,29 +142,15 @@ export class Observable<T = never> {
     return res;
   }
 
-  private _createEventListenerFromListener(
-    listener: Listener<T>
-  ): EventListener {
-    return (event: Event) => {
-      if (!this._error) {
-        this._innerSequence.forEach(value => listener(value, event));
-      }
-    };
-  }
-
-  protected _complete() {
-    this._isComplete = true;
-  }
-
-  protected _executeOperations(
+  protected _executeOperations<T, U = any>(
     value: T,
-    operators: OperatorFunction<T, OperationResult<any>>[]
-  ): OperationResult<any> {
+    operators: OperatorFunction<T, OperationResult<U>>[]
+  ): OperationResult<U> {
     const computedValue = this._computeValue(
       value as T,
       ...(filterNonFunctions(...operators) as OperatorFunction<
         T,
-        OperationResult<any>
+        OperationResult<U>
       >[])
     );
 
