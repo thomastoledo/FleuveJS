@@ -1,39 +1,101 @@
-// import { MutableObservable, Observable } from ".";
-// import { OperatorFunction, OperationResult } from "../models/operator";
-// import { subscriberOf, Subscription } from "../models/subscription";
+import { MutableObservable, Observable } from ".";
+import { isFunction } from "../helpers/function.helper";
+import { OperatorFunction, OperationResult, OperationResultFlag } from "../models/operator";
+import {
+  EMPTY_SUBSCRIPTION,
+  isInstanceOfSubscriber,
+  OnNext,
+  Subscriber,
+  subscriberOf,
+  Subscription,
+} from "../models/subscription";
 
-// export class ObservableFork<T> extends Observable<T> {
-//   private subscription!: Subscription;
+export class ObservableFork<T> extends Observable<T> {
+  private subscriptions: Subscription[] = [];
+  private operators: OperatorFunction<T, OperationResult<any>>[] = [];
 
-//   constructor(
-//     obs: Observable<T>,
-//     ...operators: OperatorFunction<T, OperationResult<any>>[]
-//   ) {
-//     super();
-//     this.subscription = obs.subscribe({
-//       next: (value) => this._subscribers.forEach(s => s.next && s.next(this._executeOperations<T, T>(value, operators).value)),
-//       error: (err) => {
-//         this._error = err;
-//         this._complete();
-//         this._triggerOnError();
-//       },
-//       complete: () => {
-//         this.subscription.unsubscribe();
-//         this._complete();
-//         this._triggerOnComplete();
-//       },
-//     });
-//   }
+  constructor(
+    private sourceObs$: Observable<T>,
+    ...operators: OperatorFunction<T, OperationResult<any>>[]
+  ) {
+    super();
+    this.operators = operators;
+    this._isComplete = (sourceObs$ as any)._isComplete;
 
-//   close() {
-//     this.closeForks();
-//   }
+    this.sourceObs$.subscribe({
+      next: (value) => {
+        this._subscribers.forEach(
+          (s) =>
+            {
+              if (s.next) {
+                const result = this._executeOperations<T, T>(value, operators);
+                if (!result.isFilterNotMatched() && !result.isMustStop()) {
+                  return s.next(result.value)
+                }
 
-//   closeForks(): void {
-//     // this._forks$.forEach((fork$) => {
-//     //   fork$.closeForks();
-//     //   fork$._complete();
-//     //   fork$._triggerOnComplete();
-//     // });
-//   }
-// }
+                if (result.isMustStop()) {
+                  this.close();
+                }
+              } 
+          }
+        );
+      },
+      error: (err) => {
+        this._error = err;
+        this._subscribers.forEach((s) => s.error && s.error(err));
+      },
+
+      complete: () => {
+        this._isComplete = true;
+        this.unsubscribe();
+        this._subscribers.forEach((s) => s.complete && s.complete());
+      },
+    });
+  }
+
+  subscribe(subscriber: Subscriber<T> | OnNext<T>): Subscription {
+    if (!isFunction(subscriber) && !isInstanceOfSubscriber(subscriber)) {
+      throw new Error("Please provide either a function or a Subscriber");
+    }
+
+    let _subscriber: Subscriber<T> = !isInstanceOfSubscriber(subscriber)
+      ? subscriberOf(subscriber)
+      : subscriber;
+
+    this._subscribers.push(_subscriber);
+
+    // On va, pour chaque événement de la source,
+    // appliquer les opérations du fork
+    // et s'arrêter dès qu'il y a une erreur
+    // todo le faire aussi pour le pipe()
+    const newSequence: OperationResult<T>[] = [];
+    const sourceSequence = (this.sourceObs$ as any)._innerSequence; // FIXME ew
+    for (let i = 0, l = sourceSequence.length; i < l; i++ ) {
+      try {
+        newSequence.push(this._executeOperations(sourceSequence[i].value, this.operators));
+      } catch (error) {
+        newSequence.push(new OperationResult(sourceSequence[i].value, OperationResultFlag.OperationError, error as Error));
+        i = l;
+      }
+    }
+
+    this.executeSubscriber(
+      _subscriber,
+      newSequence
+    );
+
+    return new Subscription(
+      () =>
+        (this._subscribers = this._subscribers.filter((s) => s !== subscriber))
+    );
+  }
+
+  close() {
+    this.unsubscribe();
+    this._subscribers.forEach((s) => s.complete && s.complete());
+  }
+
+  private unsubscribe() {
+    this.subscriptions.forEach((s) => s.unsubscribe());
+  }
+}

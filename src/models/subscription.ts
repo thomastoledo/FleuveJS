@@ -7,6 +7,8 @@ export class Subscription {
     }
 }
 
+export const EMPTY_SUBSCRIPTION = new Subscription(() => {});
+
 interface UnsubscribeCallback {
     (): void
 }

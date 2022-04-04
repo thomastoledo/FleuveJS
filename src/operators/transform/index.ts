@@ -1,2 +1,2 @@
 export * from './map';
-// export * from './switch-map';
+export * from './switch-map';

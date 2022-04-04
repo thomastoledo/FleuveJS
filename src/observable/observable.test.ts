@@ -2,16 +2,9 @@ import { subscriberOf, OnNext, Subscriber } from "../models/subscription";
 import { Observable } from "./observable";
 import { OperationResult, OperationResultFlag } from "../models/operator";
 import { filter, map } from "../operators";
+import {fail} from '../../tests/helpers/function.helpers';
 
-fdescribe("Observable", () => {
-  function fail(message: string = "", ...args: any[]) {
-    const errorMsg = `Test failed\n${message} ${args.reduce(
-      (acc, curr) => `${acc} ${curr}`,
-      ""
-    )}`;
-    throw new Error(errorMsg);
-  }
-
+describe("Observable", () => {
   it("should create a new Observable with no emitting value", (done) => {
     const obs$ = new Observable();
     expect((obs$ as any)._innerSequence).toEqual([]);
@@ -142,15 +135,6 @@ fdescribe("Observable", () => {
       );
       result2$.subscribe((value) => expect(value).toEqual(0));
     });
-
-    // TODO should be in switchmap's test
-    // it("should return a new Observable", () => {
-    //   const obs$ = new Observable(12);
-    //   const pipedobs$ = obs$.pipe(
-    //     switchMap((x: number) => new Observable(x * 2))
-    //   );
-    //   pipedobs$.subscribe((value) => expect(value).toEqual(24));
-    // });
 
     // it("should throw an error", () => {
     //   const thresholdError = new Error("Threshold error: value is > 100");

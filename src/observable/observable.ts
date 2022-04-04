@@ -15,38 +15,11 @@ import {
 } from "../models/subscription";
 
 export class Observable<T = never> {
-  //   for (let i = 0; i < operations.length; i++) {
-  //     res = operations[i](res.value);
-  //     switch (res.flag) {
-  //       case OperationResultFlag.FilterNotMatched:
-  //       case OperationResultFlag.MustStop:
-  //         i = operations.length;
-  //         break;
-  //       case OperationResultFlag.UnwrapSwitch:
-  //         res = new OperationResult(res.value._innerSequence.pop());
-  //         break;
-  //       default:
-  //         break;
-  //     }
-  //   }
-  //   return res;
-  // }
-  // protected _executeOperations<T, U = any>(
-  //   value: T,
-  //   operators: OperatorFunction<T, OperationResult<U>>[]
-  // ): OperationResult<U> {
-  //   const computedValue = this._computeValue(
-  //     value as T,
-  //     ...(filterNonFunctions(...operators) as OperatorFunction<
-  //       T,
-  //       OperationResult<U>
-  //     >[])
-  //   );
-  //   return computedValue;
-  // }
 
   protected _innerSequence: OperationResult<T>[];
   protected _subscribers: Subscriber<T>[] = [];
+  protected _isComplete: boolean = true;
+  protected _error!: Error;
 
   constructor(...initialSequence: T[]) {
     this._innerSequence = initialSequence.map(
@@ -96,7 +69,7 @@ export class Observable<T = never> {
     );
   }
 
-  private executeSubscriber(
+  protected executeSubscriber(
     _subscriber: Subscriber<T>,
     sequence: OperationResult<T>[]
   ): void {
@@ -104,18 +77,18 @@ export class Observable<T = never> {
       let operationResult = sequence[i];
 
       if (operationResult.isOperationError()) {
-        (_subscriber.error &&
-          _subscriber.error(operationResult.error as Error)) ||
-          (() => {
-            throw operationResult.error;
-          })();
+        this._error = operationResult.error as Error;
+        (_subscriber.error || (() => {throw operationResult.error}))(operationResult.error as Error);
         break;
       }
+      
+      if (operationResult.isFilterNotMatched() || operationResult.isMustStop()) {
+        return;
+      }
 
-      operationResult = OperationResult.unwrap(operationResult);
       _subscriber.next && _subscriber.next(operationResult.value);
     }
-    _subscriber.complete && _subscriber.complete();
+    this._isComplete && _subscriber.complete && _subscriber.complete();
   }
 
   private _computeValue<T>(
@@ -124,16 +97,14 @@ export class Observable<T = never> {
   ): OperationResult<any> {
     let res: OperationResult<any> = new OperationResult(initValue);
     for (let i = 0; i < operations.length; i++) {
-      const oldRes = res;
       res = operations[i](res.value);
       switch (res.flag) {
         case OperationResultFlag.FilterNotMatched:
-          // res = oldRes;
         case OperationResultFlag.MustStop:
           i = operations.length;
           break;
         case OperationResultFlag.UnwrapSwitch:
-          res = new OperationResult(res.value._innerSequence.pop());
+          res = new OperationResult(res.value._innerSequence.pop()?.value);
           break;
         default:
           break;
@@ -153,7 +124,6 @@ export class Observable<T = never> {
         OperationResult<U>
       >[])
     );
-
     return computedValue;
   }
 }

@@ -1,3 +1,5 @@
+import { Observable } from "../observable";
+
 export type OperatorFunction<T, U = never> = (source: T) => U;
 
 export class OperationResult<T> {
@@ -30,18 +32,11 @@ export class OperationResult<T> {
     isOperationError(): boolean {
         return this._flag === OperationResultFlag.OperationError
     }
-
-    static unwrap<U = any>(operation: OperationResult<OperationResult<U> | U>): OperationResult<U> {
-        if (operation.isUnwrapSwitch()) {
-            return operation._value as OperationResult<U>;
-        }
-        return operation as OperationResult<U>;
-    }
 }
 
 export enum OperationResultFlag {
-    UnwrapSwitch,
-    MustStop,
-    FilterNotMatched,
-    OperationError,
+    UnwrapSwitch = 'UnwrapSwitch',
+    MustStop = 'MustStop',
+    FilterNotMatched = 'FilterNotMatched',
+    OperationError = 'OperationError',
 }
