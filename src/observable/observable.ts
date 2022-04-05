@@ -33,21 +33,23 @@ export class Observable<T = never> {
     const obs$ = new Observable<U>();
 
     const newSequence: OperationResult<U>[] = [];
-    for (
-      let i = 0, l = this._innerSequence.length;
-      i < l && !this._innerSequence[i].isMustStop();
-      i++
-    ) {
-
-      const operationResult = this._executeOperations(
-        this._innerSequence[i].value,
-        operations
-      );
-
-      if (!operationResult.isFilterNotMatched()) {
-        newSequence.push(operationResult);
+    const sourceSequence = this._innerSequence;
+    for (let i = 0, l = sourceSequence.length; i < l && !sourceSequence[i].isMustStop(); i++ ) {
+      try {
+        const operationResult = this._executeOperations(
+          sourceSequence[i].value,
+          operations
+        );
+        if (!operationResult.isFilterNotMatched()) {
+          newSequence.push(operationResult);
+        }
+      } catch (error) {
+        newSequence.push(new OperationResult(sourceSequence[i].value as any, OperationResultFlag.OperationError, error as Error));
+        i = l;
       }
     }
+
+    
     obs$._innerSequence = newSequence;
     return obs$;
   }

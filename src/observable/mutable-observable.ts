@@ -16,7 +16,11 @@ export class MutableObservable<T = never> extends Observable<T> {
 
   close(): void {
     this._isComplete = true;
-    this._subscribers.forEach((s) => s.complete && s.complete());
+    this._subscribers.forEach((s) => {
+      if (s.complete) {
+        s.complete();
+      }
+    });
   }
 
   /**
@@ -33,6 +37,7 @@ export class MutableObservable<T = never> extends Observable<T> {
       this._innerSequence.map((event) => event.value),
       operations
     );
+
     const idxError = newSequence.findIndex((opRes) => opRes.isOperationError());
     if (idxError > -1) {
       this._innerSequence = newSequence.slice(0, idxError);
@@ -75,10 +80,9 @@ export class MutableObservable<T = never> extends Observable<T> {
           break;
         }
 
-        if (operationResult.isFilterNotMatched()) {
-          break;
+        if (!operationResult.isFilterNotMatched()) {
+          newSequence.push(operationResult);
         }
-        newSequence.push(operationResult);
       } catch (error: any) {
         this._error = error;
         newSequence.push(

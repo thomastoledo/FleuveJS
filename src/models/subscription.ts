@@ -1,13 +1,13 @@
 import { isFunction } from "../helpers/function.helper";
 export class Subscription {
-    constructor(private _unsubscribeCallback: UnsubscribeCallback) {}
+    constructor(private _unsubscribeCallback?: UnsubscribeCallback) {}
     
     unsubscribe(): void {
-        this._unsubscribeCallback();
+        this._unsubscribeCallback && this._unsubscribeCallback();
     }
 }
 
-export const EMPTY_SUBSCRIPTION = new Subscription(() => {});
+export const EMPTY_SUBSCRIPTION = new Subscription();
 
 interface UnsubscribeCallback {
     (): void

@@ -1,8 +1,8 @@
 import { subscriberOf, OnNext, Subscriber } from "../models/subscription";
 import { Observable } from "./observable";
 import { OperationResult, OperationResultFlag } from "../models/operator";
-import { filter, map } from "../operators";
-import {fail} from '../../tests/helpers/function.helpers';
+import { filter, map, of } from "../operators";
+import { fail } from "../../tests/helpers/function.helpers";
 
 describe("Observable", () => {
   it("should create a new Observable with no emitting value", (done) => {
@@ -74,7 +74,6 @@ describe("Observable", () => {
   });
 
   describe("pipe", () => {
-
     it("should return a new Observable with no value", () => {
       const obs$ = new Observable<number>();
       const pipedobs$ = obs$.pipe(map((value: number) => value * 2));
@@ -95,8 +94,10 @@ describe("Observable", () => {
 
     it("should return a new Observable with '100 potatoes' as a value", () => {
       const obs$ = new Observable(1);
-      const pipedObs$ = obs$.pipe(map(x => x * 10)).pipe(map((x) => `${x * 10} potatoes`));
-      pipedObs$.subscribe((value) => expect(value).toEqual('100 potatoes'));
+      const pipedObs$ = obs$
+        .pipe(map((x) => x * 10))
+        .pipe(map((x) => `${x * 10} potatoes`));
+      pipedObs$.subscribe((value) => expect(value).toEqual("100 potatoes"));
     });
 
     it("should return a Observable(6)", () => {
@@ -136,37 +137,39 @@ describe("Observable", () => {
       result2$.subscribe((value) => expect(value).toEqual(0));
     });
 
-    // it("should throw an error", () => {
-    //   const thresholdError = new Error("Threshold error: value is > 100");
-    //   const obs$ = new Observable(100);
-    //   expect.assertions(1);
-    //   obs$
-    //     .pipe(
-    //       map((x: number) => {
-    //         if (x < 100) {
-    //           return x;
-    //         } else {
-    //           throw thresholdError;
-    //         }
-    //       })
-    //     )
-    //     .subscribe(jest.fn(), (err) => expect(err).toEqual(thresholdError));
-    // });
+    it("should throw an error", () => {
+      const thresholdError = new Error("Threshold error: value is > 100");
+      const obs$ = new Observable(100);
+      expect.assertions(1);
+      obs$
+        .pipe(
+          map((x: number) => {
+            if (x < 100) {
+              return x;
+            } else {
+              throw thresholdError;
+            }
+          })
+        )
+        .subscribe({ error: (err) => expect(err).toEqual(thresholdError) });
+    });
 
-    // it("should return a Observable with an error", () => {
-    //   const obs$ = new Observable();
-    //   (obs$ as any)._error = new Error("");
-    //   expect.assertions(1);
-    //   obs$.pipe(map((x) => x * 2)).subscribe(
-    //     () => {
-    //       console.info("coucou");
-    //       expect(false).toBe(true);
-    //       fail();
-    //     },
-    //     (err) => {
-    //       expect(err).toEqual(new Error(""));
-    //     }
-    //   );
-    // });
+    it("should return an Observable with an error", () => {
+      const obs$ = of(12);
+      obs$
+        .pipe(
+          map(() => {
+            throw new Error("error");
+          })
+        )
+        .subscribe({
+          next: () => {
+            fail();
+          },
+          error: (err) => {
+            expect(err).toEqual(new Error("error"));
+          },
+        });
+    });
   });
 });

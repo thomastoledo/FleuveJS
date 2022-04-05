@@ -1,6 +1,6 @@
 import { MutableObservable } from "../observable/mutable-observable";
 import { Observable } from "../observable/observable";
-import { subscriberOf } from "./subscription";
+import { EMPTY_SUBSCRIPTION, subscriberOf, Subscription } from "./subscription";
 
 describe('Subscription', () => {
 
@@ -22,4 +22,9 @@ describe('Subscription', () => {
             expect(err).toEqual(new Error(`Please provide functions for next, error and complete`));
         }
     });
+
+    it('should be an empty Subscription', () => {
+        const emptySub = new Subscription();
+        expect(EMPTY_SUBSCRIPTION).toEqual(emptySub);
+    })
 });

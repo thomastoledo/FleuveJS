@@ -10,7 +10,7 @@ import { mutable } from "../operators";
 describe('MutableObservable', () => {
   it('will succeed', ()=> expect(true).toBe(true));
       describe("compile", () => {
-        it("should execute each function and set a new value", () => {
+        it("should execute each function", () => {
           const operations: OperatorFunction<number, OperationResult<any>>[] = [
             jest.fn(),
             jest.fn(),
@@ -148,10 +148,12 @@ describe('MutableObservable', () => {
       });
 
       describe('close', () => {
-        it('should close the Observable', (done) => {
+        it('should close the Observable and trigger subscribers', () => {
           const obs$ = mutable<number>();
+          const completeCb = jest.fn();
+          obs$.subscribe({next: () => fail('No value should have been emited'), complete: completeCb});
           obs$.close();
-          obs$.subscribe({next: () => fail('MutableObservable should have been closed'), complete: () => done()});
+          expect(completeCb).toHaveBeenCalledTimes(1);
         });
       });
 });

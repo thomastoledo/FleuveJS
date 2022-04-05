@@ -1,8 +1,7 @@
-import { MutableObservable, Observable } from ".";
+import { Observable } from ".";
 import { isFunction } from "../helpers/function.helper";
 import { OperatorFunction, OperationResult, OperationResultFlag } from "../models/operator";
 import {
-  EMPTY_SUBSCRIPTION,
   isInstanceOfSubscriber,
   OnNext,
   Subscriber,
@@ -91,8 +90,8 @@ export class ObservableFork<T> extends Observable<T> {
   }
 
   close() {
-    this.unsubscribe();
     this._subscribers.forEach((s) => s.complete && s.complete());
+    this.unsubscribe();
   }
 
   private unsubscribe() {

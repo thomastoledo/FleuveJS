@@ -3,9 +3,11 @@ import { of } from "../operators/static/creation/of";
 import { ObservableFork } from "./observable-fork";
 import { fail } from "../../tests/helpers/function.helpers";
 import { Observable } from "./observable";
+import { Subscription } from "../models/subscription";
 
 describe("ObservableFork", () => {
   it("will succeed", () => expect(true).toBe(true));
+
   describe("close", () => {
     it("should stop forked Observables", (done) => {
       const obs$ = fork(of(12));
@@ -144,6 +146,31 @@ describe("ObservableFork", () => {
       );
       forked$ = fork(mut$);
       expect((forked$ as any)._error).toEqual(new Error("fork error"));
+    });
+  });
+
+  describe("subscribe", () => {
+    it("should throw an error", () => {
+      const obs$ = fork(of());
+      expect.assertions(1);
+      try {
+        obs$.subscribe(12 as any);
+      } catch (err) {
+        expect(err).toEqual(
+          new Error("Please provide either a function or a Subscriber")
+        );
+      }
+    });
+  });
+
+  describe('unsubscribe', () => {
+    it('should call every unsubscribe method of subscriptions', () => {
+      const forked$ = fork(of());
+      const subscription = new Subscription();
+      const unsubscribeSpy = jest.spyOn(subscription, 'unsubscribe');
+      (forked$ as any).subscriptions.push(subscription);
+      (forked$ as any).unsubscribe();
+      expect(unsubscribeSpy).toHaveBeenNthCalledWith(1);
     });
   });
 });
