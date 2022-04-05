@@ -1,8 +1,7 @@
 import { subscriberOf, OnNext, Subscriber } from "../models/subscription";
 import { Observable } from "./observable";
-import { OperationResult, OperationResultFlag } from "../models/operator";
 import { filter, map, of } from "../operators";
-import { fail } from "../../tests/helpers/function.helpers";
+import { fail } from "../helpers/function.helper";
 
 describe("Observable", () => {
   it("should create a new Observable with no emitting value", (done) => {

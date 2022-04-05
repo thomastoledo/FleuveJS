@@ -1,4 +1,4 @@
-import { MutableObservable } from "../../../observable/mutable-observable";
+import { MutableObservable } from "../../../observable";
 
 export const onEvent = (element: HTMLElement, eventName: keyof HTMLElementEventMap) => {
     const obs$ = new MutableObservable<Event>();

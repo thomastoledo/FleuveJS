@@ -2,15 +2,19 @@ export declare type OperatorFunction<T, U = never> = (source: T) => U;
 export declare class OperationResult<T> {
     private _value;
     private _flag?;
-    constructor(_value: T, _flag?: OperationResultFlag | undefined);
+    private _error?;
+    constructor(_value: T, _flag?: OperationResultFlag | undefined, _error?: Error | undefined);
     get value(): T;
     get flag(): OperationResultFlag | undefined;
+    get error(): Error | undefined;
     isUnwrapSwitch(): boolean;
     isMustStop(): boolean;
     isFilterNotMatched(): boolean;
+    isOperationError(): boolean;
 }
 export declare enum OperationResultFlag {
-    UnwrapSwitch = 0,
-    MustStop = 1,
-    FilterNotMatched = 2
+    UnwrapSwitch = "UnwrapSwitch",
+    MustStop = "MustStop",
+    FilterNotMatched = "FilterNotMatched",
+    OperationError = "OperationError"
 }

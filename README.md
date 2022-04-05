@@ -35,33 +35,41 @@ import { Observable } from 'https://unpkg.com/observablejs@latest/bundle/observa
 
 `Observables` are objects containing an inner sequence. Their sequence is finite, and they are immutable.
 `MutableObservables` are objects containing an inner sequence too, except this one can be mutated over time. It is infinite, and can be completed with the `.close()` method.
+`ObservableFork` are objects created from either `Observable`, `MutableObservable` or `ObservableFork`:
+- they can be closed;
+- they can be potentially infinite;
+- they **cannot** be mutated;
+- they can come with pre-processing operations: when the source emits a new value, the pre-processing operations will be executed on it before being passed to the fork's subscribers.
 
 ## How To Use Observables
 
-### Instantiate an Observable
-
-*Warning: soon to be deprecated in favor of static operators*
+## Instantiate an Observable
 ```ts
-const johnDoe$ = new Observable({firstname: 'john', lastname: 'doe'});
-const counter$ = new Observable(0);
+const temperatures$ = of(10, 20, 13, 24);
 ```
 
 ### Pipe the Observable
 You can create a new Observable with the `pipe` method.
 
 ```ts
-const obs$ = new Observable(18729);
+const obs$ = of(18729);
 const sum$ = obs$.pipe(
     map((x) => (x + '').split('')), 
     map((numbers) => numbers.reduce((acc, curr) => acc + curr, 0))
 );
 ```
-### Subscribe
-```ts
-const obs$ = new Observable(12);
-obs$.subscribe((value) => console.log(value), (err) => console.error(err), () => console.log('observable complete'));
 
-const empty$ = new Observable();
+### Subscribe to the Observable
+
+```ts
+const obs$ = of(12);
+obs$.subscribe({
+    next: (value) => console.log(value), 
+    error: (err) => console.error(err), 
+    compleyte: () => console.log('observable complete')
+});
+
+const empty$ = of();
 empty$.subscribe((value) => console.log(value)); // will never execute;
 
 // This one will throw an error
@@ -79,13 +87,8 @@ You can bind users interactions to an Observable.
 ```
 
 ```js
-const obs$ = new Observable();
-const eventSubscription = obs$.addEventListener('#clickMe', 'click', (x, event) => console.log(x, event))
-```
-
-### Remove an event listener
-```js
-eventSubscription.unsubscribe();
+const obs$ = onEvent(document.getElementById("clickMe"), "click");
+obs$.subscribe((event) => console.log('event triggered', event));
 ```
 
 ## How To Use MutableObservables
@@ -94,42 +97,43 @@ eventSubscription.unsubscribe();
 
 ### Provide new values with `next` and `compile`
 ```ts
-const obs$ = new MutableObservable(0);
+const obs$ = mutable(0);
 obs$.next(12, 13, 14, 15, 16); // obs$ inner sequence will now be [ 12, 13, 14, 15, 16 ]
-obs$.compile(map((x) => x + 1), map((x) => x * 2)); // obs$ inner sequence will will now be [ 26, 28, 30, 32, 34 ]
+obs$.compile(map((x) => x + 1), map((x) => x * 2)); // obs$ inner sequence will now be [ 26, 28, 30, 32, 34 ]
 ```
 
 ### Close a MutableObservable with `close`
 
 ```ts
-const obs$ = new MutableObservable(0);
+const obs$ = mutable(0);
 obs$.close();
 ```
 
-### `fork` the MutableObservable
-You can fork a MutableObservable. The new MutableObservable will still be connected to the original MutableObservable, but with some pre-processing operations.
+## How to use ObservableForks
+
+### `fork` observables
 
 ```ts
-const obs$ = new MutableObservable(12);
-const forked$ = obs$.fork(filter(x => x > 15));
+const obs$ = mutable(12);
+const forked$ = fork(obs$, filter(x => x > 15));
 forked$.subscribe(x => console.log(x)); // nothing would happen at first
 obs$.next(20); // now, 20 would be printed in the browser's console
 ```
 
-### You can stop a MutableObservable's forks with the `closeForks` method
+### Stop a fork
 No more values will be allowed and the forks will be flagged as complete.
 
 ```ts
-const obs$ = new MutableObservable(12);
-const fork1$ = obs$.fork(map(x => x * 2));
-const fork2$ = fork1$.fork(filter(x => x > 100));
+const obs$ = mutable(12);
+const fork1$ = fork(obs$, map(x => x * 2));
+const fork2$ = fork(obs$, filter(x => x > 100));
 
-const subscriber = subscriberOf({next: x => console.log('fork1$ value', x), complete: () => console.log('fork1 complete')});
+const subscriber = subscriberOf((x) => console.log('fork1$ value', x), () => console.log('fork1 complete'));
 fork1$.subscribe(subscriber); // will display "24"
 
-fork2$.subscribe(x => console.log('fork2$ value', x)); // will display nothing
+fork2$.subscribe((x) => console.log('fork2$ value', x)); // will display nothing
 
-obs$.closeForks(); // will trigger fork1$'s complete callback
+obs$.close(); // will trigger fork1$'s complete callback
 obs$.next(99); // the forks' subscribers won't be triggered
 ```
 
@@ -145,22 +149,22 @@ obs$.subscribe(subscriberOf((x) => console.log(x))); // will display "12", "13",
 ```
 
 #### `from` - static
-*This operator is static: it means your cannot use it as a parameter for methods such as `pipe`, `compile` or `fork`*
+*This operator is static: it means your cannot use it as a parameter for methods such as `pipe` or `compile`*
 
 This operator works just like `of`, except it will take an array as a parameter, and flatten it.
 
 #### `mutable` - static
-*This operator is static: it means your cannot use it as a parameter for methods such as `pipe`, `compile` or `fork`*
+*This operator is static: it means your cannot use it as a parameter for methods such as `pipe` or `compile`*
 
 This operator works just like `of`, except it will return a `MutableObservable` instead of an `Observable`.
 
 #### `mutableFrom` - static
-*This operator is static: it means your cannot use it as a parameter for methods such as `pipe`, `compile` or `fork`*
+*This operator is static: it means your cannot use it as a parameter for methods such as `pipe` or `compile`*
 
 This operator works just like `from`, except it will return a `MutableObservable` instead of an `Observable`.
 
 #### `preProcess` - static
-*This operator is static: it means you cannot use it as a parameter for methods such as `pipe`, `compile` or `fork`*.
+*This operator is static: it means your cannot use it as a parameter for methods such as `pipe` or `compile`*
 
 This operator allows you to create a MutableObservable bearing pre-processing operations. Those operations will execute every time you provide a new value to the MutableObservable.
 
@@ -182,17 +186,17 @@ fetch('someUrl')
 #### `map`
 
 ```ts
-const obs$ = new Observable(12);
+const obs$ = of(12);
 obs$.pipe(map(x => x * 2)).subscribe((value) => console.log(value)); // will display "24"
 ```
 
 #### `switchmap`
 
 ```ts
-const obs$ = new Observable(12);
+const obs$ = of(12);
 obs$.pipe(switchmap((x) => {
     if (x > 0) {
-        return new Observable(0);
+        return of(0);
     }
 }));
 ```
@@ -200,7 +204,7 @@ obs$.pipe(switchmap((x) => {
 #### `filter`
 
 ```ts
-const obs$ = new Observable(12, 0, -1, 100);
+const obs$ = of(12, 0, -1, 100);
 const filtered$ = obs$.pipe(filter(x => x > 10));
 filtered$.subscribe((value) => console.log(value)); // will display "12" and "100"
 ```
@@ -210,7 +214,7 @@ filtered$.subscribe((value) => console.log(value)); // will display "12" and "10
 const obs$ = preProcess(until(x => x >= 10));
 obs$.subscribe((value) => console.log(value)); // will display 0, 1, ..., 9
 
-for(let i = 0; i < 11; i++) {
+for(let i = 0; i < 100; i++) {
     obs$.next(i);
 }
 ```
@@ -226,9 +230,9 @@ for(let i = 0; i < 11; i++) {
 ```
 
 #### `ifElse`
-The `ifElse` operator is pretty useful when it comes to add branches to an Observable. it can be used either on a `pipe`, `compile`, `fork` method or on a *creation operator* such as `preProcess`.
+The `ifElse` operator is pretty useful when it comes to add branches to an Observable. it can be used either on a `pipe` or `compile` method or on a *creation operator* such as `preProcess`.
 
-If the next example, we want to sort out some data and apply a different process according to each value. Values over 30 will trigger logging treatment, while others will just trigger an API call.
+In the next example, we want to sort out some data and apply a different process according to each value. Values over 30 will trigger logging treatment, while others will just trigger an API call.
 
 ```ts
 const temperatures = [-15, 0, 12, 16, 30, 35, 45, -8];
@@ -241,7 +245,7 @@ obs$.next(...temperatures);
 ```
 
 #### `tap`
-The `tap` operator is useful when it comes to trigger a treatment that won't affect the outcome of the `pipe` / `compile` / `fork` operation.
+The `tap` operator is useful when it comes to trigger a treatment that won't affect the outcome of the `pipe` / `compile` operation.
 
 ```ts
 const obs$ = of(12);

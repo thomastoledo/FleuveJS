@@ -29,12 +29,11 @@ export class MutableObservable<T = never> extends Observable<T> {
    */
   compile(...operations: OperatorFunction<T, OperationResult<any>>[]): this {
     if (this._isComplete) {
-      // || !!this._error) {
       return this;
     }
 
     const newSequence = this._buildNewSequence(
-      this._innerSequence.map((event) => event.value),
+      this._innerSequence.filter((event) => !event.isOperationError()).map((event) => event.value),
       operations
     );
 
@@ -54,7 +53,6 @@ export class MutableObservable<T = never> extends Observable<T> {
 
   next(...events: T[]): this {
     if (this._isComplete) {
-      // || !!this._error) {
       return this;
     }
 

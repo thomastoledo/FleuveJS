@@ -1,5 +1,5 @@
 import {mutable} from './mutable';
-import {fail} from '../../../../tests/helpers/function.helpers';
+import { fail } from "../../../helpers/function.helper";
 
 describe('mutable', () => {
     it('will succeed', () => expect(true).toBe(true));

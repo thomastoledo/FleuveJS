@@ -1,7 +1,7 @@
 import { filter, fork, map, mutable, until } from "../operators";
 import { of } from "../operators/static/creation/of";
 import { ObservableFork } from "./observable-fork";
-import { fail } from "../../tests/helpers/function.helpers";
+import { fail } from "../helpers/function.helper";
 import { Observable } from "./observable";
 import { Subscription } from "../models/subscription";
 

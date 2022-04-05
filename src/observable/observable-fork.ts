@@ -1,4 +1,4 @@
-import { Observable } from ".";
+import { Observable } from "./observable";
 import { isFunction } from "../helpers/function.helper";
 import { OperatorFunction, OperationResult, OperationResultFlag } from "../models/operator";
 import {
@@ -63,10 +63,6 @@ export class ObservableFork<T> extends Observable<T> {
 
     this._subscribers.push(_subscriber);
 
-    // On va, pour chaque événement de la source,
-    // appliquer les opérations du fork
-    // et s'arrêter dès qu'il y a une erreur
-    // todo le faire aussi pour le pipe()
     const newSequence: OperationResult<T>[] = [];
     const sourceSequence = (this.sourceObs$ as any)._innerSequence; // FIXME ew
     for (let i = 0, l = sourceSequence.length; i < l; i++ ) {

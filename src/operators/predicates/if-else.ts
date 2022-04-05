@@ -1,10 +1,7 @@
-import { Observable } from "../../observable/observable";
 import {
   OperatorFunction,
   OperationResult,
-  OperationResultFlag,
 } from "../../models/operator";
-import { of } from "../static/creation/of";
 import { filter } from "./filter";
 
 export const ifElse = function <T = any, U = any>(

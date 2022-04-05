@@ -1,5 +1,3 @@
-import { Observable } from "../observable";
-
 export type OperatorFunction<T, U = never> = (source: T) => U;
 
 export class OperationResult<T> {

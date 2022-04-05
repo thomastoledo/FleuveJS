@@ -1,5 +1,4 @@
 import { MutableObservable } from "../observable/mutable-observable";
-import { Observable } from "../observable/observable";
 import { EMPTY_SUBSCRIPTION, subscriberOf, Subscription } from "./subscription";
 
 describe('Subscription', () => {
