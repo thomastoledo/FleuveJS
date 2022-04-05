@@ -4,7 +4,6 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from) {
     return to;
 };
 import { filterNonFunctions, isFunction } from "../helpers/function.helper";
-import { EventSubscription } from "../models/event";
 import { OperationResult, OperationResultFlag, } from "../models/operator";
 import { isInstanceOfSubscriber, subscriberOf, Subscription, } from "../models/subscription";
 var Observable = /** @class */ (function () {
@@ -15,97 +14,70 @@ var Observable = /** @class */ (function () {
         }
         this._subscribers = [];
         this._isComplete = true;
-        this._error = null;
-        this._innerSequence = initialSequence;
+        this._innerSequence = initialSequence.map(function (value) { return new OperationResult(value); });
     }
-    /**
-     * @param selector
-     * @param eventType
-     * @param listener
-     * @param options
-     * @returns
-     */
-    Observable.prototype.addEventListener = function (selector, eventType, listener, options) {
-        var elem = document.querySelector(selector);
-        if (!elem) {
-            throw new Error("Could not find any element with selector \"" + selector + "\"");
-        }
-        var eventListener = this._createEventListenerFromListener(listener);
-        elem.addEventListener(eventType, eventListener, options);
-        return new EventSubscription(elem, eventType, eventListener);
-    };
     Observable.prototype.pipe = function () {
         var operations = [];
         for (var _i = 0; _i < arguments.length; _i++) {
             operations[_i] = arguments[_i];
         }
         var obs$ = new Observable();
-        if (!!this._error) {
-            obs$._error = this._error;
-            obs$._complete();
-            return obs$;
-        }
         var newSequence = [];
-        for (var i = 0; i < this._innerSequence.length; i++) {
+        var sourceSequence = this._innerSequence;
+        for (var i = 0, l = sourceSequence.length; i < l && !sourceSequence[i].isMustStop(); i++) {
             try {
-                var operationResult = this._executeOperations(this._innerSequence[i], operations);
-                if (operationResult.isMustStop() || operationResult.isFilterNotMatched()) {
-                    obs$._complete();
-                    return obs$;
+                var operationResult = this._executeOperations(sourceSequence[i].value, operations);
+                if (!operationResult.isFilterNotMatched()) {
+                    newSequence.push(operationResult);
                 }
-                newSequence.push(operationResult.value);
             }
             catch (error) {
-                obs$._error = error;
-                obs$._complete();
-                return obs$;
+                newSequence.push(new OperationResult(sourceSequence[i].value, OperationResultFlag.OperationError, error));
+                i = l;
             }
         }
         obs$._innerSequence = newSequence;
         return obs$;
     };
-    Observable.prototype.subscribe = function (onNext, onError, onComplete) {
+    Observable.prototype.subscribe = function (subscriber) {
         var _this = this;
-        if (!isFunction(onNext) && !isInstanceOfSubscriber(onNext)) {
+        if (!isFunction(subscriber) && !isInstanceOfSubscriber(subscriber)) {
             throw new Error("Please provide either a function or a Subscriber");
         }
-        var subscriber = this._createSubscriber(onNext, onError, onComplete);
-        this._doNext(subscriber);
-        this._doError(subscriber);
-        this._doComplete(subscriber);
-        this._subscribers.push(subscriber);
+        var _subscriber = !isInstanceOfSubscriber(subscriber)
+            ? subscriberOf(subscriber)
+            : subscriber;
+        this._subscribers.push(_subscriber);
+        this.executeSubscriber(_subscriber, this._innerSequence);
         return new Subscription(function () {
             return (_this._subscribers = _this._subscribers.filter(function (s) { return s !== subscriber; }));
         });
     };
-    Observable.prototype._triggerOnError = function () {
-        var _this = this;
-        this._subscribers.forEach(function (s) { return _this._doError(s); });
-    };
-    Observable.prototype._triggerOnComplete = function () {
-        var _this = this;
-        this._subscribers.forEach(function (s) { return _this._doComplete(s); });
-    };
-    Observable.prototype._createSubscriber = function (onNext, onError, onComplete) {
-        if (isFunction(onNext)) {
-            return subscriberOf(onNext, (isFunction(onError) && onError) || undefined, (isFunction(onComplete) && onComplete) || undefined);
+    Observable.prototype.executeSubscriber = function (_subscriber, sequence) {
+        var _loop_1 = function (i, l) {
+            var operationResult = sequence[i];
+            if (operationResult.isOperationError()) {
+                this_1._error = operationResult.error;
+                (_subscriber.error || (function () { throw operationResult.error; }))(operationResult.error);
+                return "break";
+            }
+            if (operationResult.isFilterNotMatched() || operationResult.isMustStop()) {
+                return { value: void 0 };
+            }
+            _subscriber.next && _subscriber.next(operationResult.value);
+        };
+        var this_1 = this;
+        for (var i = 0, l = sequence.length; i < l; i++) {
+            var state_1 = _loop_1(i, l);
+            if (typeof state_1 === "object")
+                return state_1.value;
+            if (state_1 === "break")
+                break;
         }
-        return onNext;
-    };
-    Observable.prototype._doComplete = function (subscriber) {
-        if (this._isComplete && subscriber.complete) {
-            subscriber.complete();
-        }
-    };
-    Observable.prototype._doError = function (subscriber) {
-        if (!!this._error && subscriber.error) {
-            subscriber.error(this._error);
-        }
-    };
-    Observable.prototype._doNext = function (subscriber) {
-        this._innerSequence.forEach(function (value) { return subscriber.next(value); });
+        this._isComplete && _subscriber.complete && _subscriber.complete();
     };
     Observable.prototype._computeValue = function (initValue) {
+        var _a;
         var operations = [];
         for (var _i = 1; _i < arguments.length; _i++) {
             operations[_i - 1] = arguments[_i];
@@ -119,24 +91,13 @@ var Observable = /** @class */ (function () {
                     i = operations.length;
                     break;
                 case OperationResultFlag.UnwrapSwitch:
-                    res = new OperationResult(res.value._innerSequence.pop());
+                    res = new OperationResult((_a = res.value._innerSequence.pop()) === null || _a === void 0 ? void 0 : _a.value);
                     break;
                 default:
                     break;
             }
         }
         return res;
-    };
-    Observable.prototype._createEventListenerFromListener = function (listener) {
-        var _this = this;
-        return function (event) {
-            if (!_this._error) {
-                _this._innerSequence.forEach(function (value) { return listener(value, event); });
-            }
-        };
-    };
-    Observable.prototype._complete = function () {
-        this._isComplete = true;
     };
     Observable.prototype._executeOperations = function (value, operators) {
         var computedValue = this._computeValue.apply(this, __spreadArray([value], filterNonFunctions.apply(void 0, operators)));

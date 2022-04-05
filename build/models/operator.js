@@ -1,7 +1,8 @@
 var OperationResult = /** @class */ (function () {
-    function OperationResult(_value, _flag) {
+    function OperationResult(_value, _flag, _error) {
         this._value = _value;
         this._flag = _flag;
+        this._error = _error;
     }
     Object.defineProperty(OperationResult.prototype, "value", {
         get: function () {
@@ -17,6 +18,13 @@ var OperationResult = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
+    Object.defineProperty(OperationResult.prototype, "error", {
+        get: function () {
+            return this._error;
+        },
+        enumerable: false,
+        configurable: true
+    });
     OperationResult.prototype.isUnwrapSwitch = function () {
         return this._flag === OperationResultFlag.UnwrapSwitch;
     };
@@ -26,12 +34,16 @@ var OperationResult = /** @class */ (function () {
     OperationResult.prototype.isFilterNotMatched = function () {
         return this._flag === OperationResultFlag.FilterNotMatched;
     };
+    OperationResult.prototype.isOperationError = function () {
+        return this._flag === OperationResultFlag.OperationError;
+    };
     return OperationResult;
 }());
 export { OperationResult };
 export var OperationResultFlag;
 (function (OperationResultFlag) {
-    OperationResultFlag[OperationResultFlag["UnwrapSwitch"] = 0] = "UnwrapSwitch";
-    OperationResultFlag[OperationResultFlag["MustStop"] = 1] = "MustStop";
-    OperationResultFlag[OperationResultFlag["FilterNotMatched"] = 2] = "FilterNotMatched";
+    OperationResultFlag["UnwrapSwitch"] = "UnwrapSwitch";
+    OperationResultFlag["MustStop"] = "MustStop";
+    OperationResultFlag["FilterNotMatched"] = "FilterNotMatched";
+    OperationResultFlag["OperationError"] = "OperationError";
 })(OperationResultFlag || (OperationResultFlag = {}));

@@ -1,26 +1,19 @@
-import { EventSubscription, Listener } from "../models/event";
 import { subscriberOf, OnNext, Subscriber } from "../models/subscription";
-import { filter } from "../operators/predicates/filter";
-import { map } from "../operators/transform/map";
-import { switchMap } from "../operators/transform/switch-map";
 import { Observable } from "./observable";
+import { filter, map, of } from "../operators";
+import { fail } from "../helpers/function.helper";
 
 describe("Observable", () => {
-  function fail(message: string = "", ...args: any[]) {
-    const errorMsg = `Test failed\n${message} ${args.reduce(
-      (acc, curr) => `${acc} ${curr}`,
-      ""
-    )}`;
-    throw new Error(errorMsg);
-  }
-
   it("should create a new Observable with no emitting value", (done) => {
     const obs$ = new Observable();
     expect((obs$ as any)._innerSequence).toEqual([]);
-    obs$.subscribe((value) => {
-      fail("A value has been emitted. Should not. Value was:", value);
+    obs$.subscribe({
+      next: (value) =>
+        fail("A value has been emitted. Should not. Value was:", value),
+      error: (error) =>
+        fail("An error has been emitted. Should not. Error was:", error),
+      complete: () => done(),
     });
-    done();
   });
 
   it("should create a new Observable with an emitting value", (done) => {
@@ -66,16 +59,16 @@ describe("Observable", () => {
       expect(subscriber.next).toHaveBeenNthCalledWith(1, 12);
     });
 
-    it("should execute onNext", () => {
-      const onNext: OnNext<number> = jest.fn();
+    it("should execute next", () => {
+      const next: OnNext<number> = jest.fn();
       const obs$ = new Observable<number>(12);
-      obs$.subscribe(onNext);
-      expect(onNext).toHaveBeenNthCalledWith(1, 12);
+      obs$.subscribe(next);
+      expect(next).toHaveBeenNthCalledWith(1, 12);
     });
 
-    it('should execute onComplete', (done) => {
+    it("should execute onComplete", (done) => {
       const obs$ = new Observable(12);
-      obs$.subscribe({next: jest.fn(), complete: () => done()});
+      obs$.subscribe({ next: jest.fn(), complete: () => done() });
     });
   });
 
@@ -98,6 +91,14 @@ describe("Observable", () => {
       });
     });
 
+    it("should return a new Observable with '100 potatoes' as a value", () => {
+      const obs$ = new Observable(1);
+      const pipedObs$ = obs$
+        .pipe(map((x) => x * 10))
+        .pipe(map((x) => `${x * 10} potatoes`));
+      pipedObs$.subscribe((value) => expect(value).toEqual("100 potatoes"));
+    });
+
     it("should return a Observable(6)", () => {
       const obs$ = new Observable(12);
       const mappedobs$ = obs$.pipe(map((value: number) => value / 2));
@@ -106,17 +107,13 @@ describe("Observable", () => {
 
     it("should return a Observable(12)", () => {
       const obs$ = new Observable(12);
-      const filteredobs$ = obs$.pipe(
-        filter((value: number) => value > 10)
-      );
+      const filteredobs$ = obs$.pipe(filter((value: number) => value > 10));
       filteredobs$.subscribe((value) => expect(value).toEqual(12));
     });
 
     it("should return a filtered Observable with no value", () => {
       const obs$ = new Observable(12);
-      const filteredobs$ = obs$.pipe(
-        filter((value: number) => value < 10)
-      );
+      const filteredobs$ = obs$.pipe(filter((value: number) => value < 10));
       expect((filteredobs$ as any)._innerSequence).toEqual([]);
       filteredobs$.subscribe(() => {
         fail("Should not go there, Observable should not have been started");
@@ -139,14 +136,6 @@ describe("Observable", () => {
       result2$.subscribe((value) => expect(value).toEqual(0));
     });
 
-    it("should return a new Observable", () => {
-      const obs$ = new Observable(12);
-      const pipedobs$ = obs$.pipe(
-        switchMap((x: number) => new Observable(x * 2))
-      );
-      pipedobs$.subscribe((value) => expect(value).toEqual(24));
-    });
-
     it("should throw an error", () => {
       const thresholdError = new Error("Threshold error: value is > 100");
       const obs$ = new Observable(100);
@@ -161,110 +150,25 @@ describe("Observable", () => {
             }
           })
         )
-        .subscribe(jest.fn(), (err) => expect(err).toEqual(thresholdError));
+        .subscribe({ error: (err) => expect(err).toEqual(thresholdError) });
     });
 
-    it('should return a Observable with an error', () => {
-      const obs$ = new Observable();
-      (obs$ as any)._error = new Error('');
-      expect.assertions(1);
-      obs$.pipe(map((x) => x * 2)).subscribe(() => fail(), (err) => expect(err).toEqual(new Error('')));
-    });
-  });
-
-  describe("addEventListener", () => {
-    it("should throw an error", () => {
-      jest.spyOn(document, "querySelector").mockReturnValue(null);
-      expect.assertions(1);
-      try {
-        const obs$ = new Observable();
-        obs$.addEventListener("", "click", () => {});
-      } catch (err) {
-        expect(err).toEqual(
-          new Error(`Could not find any element with selector ""`)
-        );
-      }
-    });
-
-    it("should call element.addEventListener", () => {
-      const dummyAddEventListener = jest.fn();
-      const dummyElem: Element = {
-        addEventListener: dummyAddEventListener,
-      } as any;
-      jest.spyOn(document, "querySelector").mockReturnValue(dummyElem);
-      const obs$ = new Observable();
-      obs$.addEventListener("test", "click", () => {});
-      expect(dummyAddEventListener).toHaveBeenCalledWith(
-        "click",
-        expect.any(Function),
-        undefined
-      );
-    });
-
-    it("should call observable._createEventListenerFromListener", () => {
-      jest
-        .spyOn(document, "querySelector")
-        .mockReturnValue({ addEventListener: jest.fn() } as any);
-      const obs$ = new Observable();
-      const _createEventListenerFromListenerSpy = jest.spyOn(
-        obs$ as any,
-        "_createEventListenerFromListener"
-      );
-      const listener: Listener = jest.fn();
-      obs$.addEventListener("test", "click", listener);
-      expect(_createEventListenerFromListenerSpy).toHaveBeenCalledWith(
-        listener
-      );
-    });
-
-    it("should return an event subscription", () => {
-      const dummyAddEventListener = jest.fn();
-      const dummyRemoveEventListener = jest.fn();
-      const dummyElem: Element = {
-        addEventListener: dummyAddEventListener,
-        removeEventListener: dummyRemoveEventListener,
-      } as any;
-      const dummyListener = jest.fn();
-      jest.spyOn(document, "querySelector").mockReturnValue(dummyElem);
-      const obs$ = new Observable();
-      const eventSubscription = obs$.addEventListener(
-        "test",
-        "click",
-        dummyListener
-      );
-      expect(eventSubscription).toBeInstanceOf(EventSubscription);
-
-      eventSubscription.unsubscribe();
-      expect(dummyRemoveEventListener).toHaveBeenNthCalledWith(
-        1,
-        "click",
-        expect.any(Function)
-      );
-    });
-  });
-
-  describe("_createEventListenerFromListener", () => {
-    it("should return an eventListener", () => {
-      const obs$ = new Observable(12);
-      const listener = jest.fn();
-      const eventListener = (obs$ as any)._createEventListenerFromListener(
-        listener
-      );
-      expect(eventListener).toBeTruthy();
-      eventListener();
-      expect(listener).toHaveBeenCalledTimes(1);
-    });
-
-    it("should return an eventListener but never call it", () => {
-      const obs$ = new Observable(12);
-      (obs$ as any)._error = new Error("");
-      const listener = jest.fn();
-      const eventListener = (obs$ as any)._createEventListenerFromListener(
-        listener
-      );
-      expect(eventListener).toBeTruthy();
-      eventListener();
-      expect(listener).not.toHaveBeenCalled();
+    it("should return an Observable with an error", () => {
+      const obs$ = of(12);
+      obs$
+        .pipe(
+          map(() => {
+            throw new Error("error");
+          })
+        )
+        .subscribe({
+          next: () => {
+            fail();
+          },
+          error: (err) => {
+            expect(err).toEqual(new Error("error"));
+          },
+        });
     });
   });
 });

@@ -4,6 +4,8 @@ import { map } from '../../transform/map';
 import {preProcess} from './pre-process';
 
 describe('preProcess', () => {
+    it('will succeed', () => expect(true).toBe(true));
+
     it('should return a new Observable', () => {
         expect(preProcess()).toBeInstanceOf(Observable);
     });

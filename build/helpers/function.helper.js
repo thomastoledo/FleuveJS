@@ -8,3 +8,13 @@ export function filterNonFunctions() {
     }
     return fns.filter(function (f) { return isFunction(f); });
 }
+/* istanbul ignore next */
+export function fail(message) {
+    if (message === void 0) { message = ""; }
+    var args = [];
+    for (var _i = 1; _i < arguments.length; _i++) {
+        args[_i - 1] = arguments[_i];
+    }
+    var errorMsg = "Test failed\n" + message + " " + args.reduce(function (acc, curr) { return acc + " " + curr; }, "");
+    throw new Error(errorMsg);
+}

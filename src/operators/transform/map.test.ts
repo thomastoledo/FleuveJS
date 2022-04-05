@@ -1,6 +1,7 @@
 import { map } from "./map";
 
 describe("Operators", () => {
+
   describe("map", () => {
     it("should return a new function to apply the mapping", () => {
       let _innerSource: any = 12;

@@ -13,6 +13,7 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+import { OperationResult, OperationResultFlag, } from "../models/operator";
 import { Observable } from "./observable";
 var MutableObservable = /** @class */ (function (_super) {
     __extends(MutableObservable, _super);
@@ -22,93 +23,78 @@ var MutableObservable = /** @class */ (function (_super) {
             initialSequence[_i] = arguments[_i];
         }
         var _this = _super.apply(this, initialSequence) || this;
-        _this._forks$ = [];
         _this._preProcessOperations = [];
         _this._isComplete = false;
         return _this;
     }
     MutableObservable.prototype.close = function () {
-        this._complete();
-        this._triggerOnComplete();
-        this.closeForks();
-    };
-    MutableObservable.prototype.closeForks = function () {
-        this._forks$.forEach(function (fork$) {
-            fork$.closeForks();
-            fork$._complete();
-            fork$._triggerOnComplete();
+        this._isComplete = true;
+        this._subscribers.forEach(function (s) {
+            if (s.complete) {
+                s.complete();
+            }
         });
     };
     /**
      * @param operations
-     * @returns
+     * @returns this
      */
     MutableObservable.prototype.compile = function () {
         var operations = [];
         for (var _i = 0; _i < arguments.length; _i++) {
             operations[_i] = arguments[_i];
         }
-        if (this._isComplete || !!this._error) {
+        if (this._isComplete) {
             return this;
         }
-        var newSequence = this._buildNewSequence(this._innerSequence, operations);
-        this.next.apply(this, newSequence);
-        return this;
-    };
-    MutableObservable.prototype.fork = function () {
-        var operators = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            operators[_i] = arguments[_i];
+        var newSequence = this._buildNewSequence(this._innerSequence.filter(function (event) { return !event.isOperationError(); }).map(function (event) { return event.value; }), operations);
+        var idxError = newSequence.findIndex(function (opRes) { return opRes.isOperationError(); });
+        if (idxError > -1) {
+            this._innerSequence = newSequence.slice(0, idxError);
+            this.next.apply(this, this._innerSequence.map(function (event) { return event.value; }));
+            this._innerSequence.push(newSequence[idxError]);
+            this._triggerExecution([newSequence[idxError]], this._subscribers);
+            return this;
         }
-        var fork$ = new MutableObservable();
-        fork$._preProcessOperations = operators;
-        fork$._error = this._error;
-        this.subscribe(function (value) { fork$.next(value); }, function (err) {
-            fork$._error = err;
-            fork$._triggerOnError();
-            fork$.close();
-        }, function () { return fork$.close(); });
-        this._forks$.push(fork$);
-        return fork$;
+        this.next.apply(this, (this._innerSequence = newSequence).map(function (event) { return event.value; }));
+        return this;
     };
     MutableObservable.prototype.next = function () {
         var events = [];
         for (var _i = 0; _i < arguments.length; _i++) {
             events[_i] = arguments[_i];
         }
-        if (this._isComplete || !!this._error) {
+        if (this._isComplete) {
             return this;
         }
         this._innerSequence = this._buildNewSequence(events, this._preProcessOperations);
-        this._triggerOnNext(this._innerSequence, this._subscribers);
-        this._triggerOnError();
-        this._triggerOnComplete();
+        this._triggerExecution(this._innerSequence, this._subscribers);
         return this;
     };
     MutableObservable.prototype._buildNewSequence = function (events, operations) {
         var newSequence = [];
-        for (var i = 0; i < events.length; i++) {
+        for (var i = 0, l = events.length; i < l; i++) {
             try {
                 var operationResult = this._executeOperations(events[i], operations);
                 if (operationResult.isMustStop()) {
                     this.close();
                     break;
                 }
-                if (operationResult.isFilterNotMatched()) {
-                    break;
+                if (!operationResult.isFilterNotMatched()) {
+                    newSequence.push(operationResult);
                 }
-                newSequence.push(operationResult.value);
             }
             catch (error) {
                 this._error = error;
-                this._triggerOnError();
-                this.close();
+                newSequence.push(new OperationResult(events[i], OperationResultFlag.OperationError, error));
+                i = l; // Do we really want to stop the whole stream if there is an error?
             }
         }
         return newSequence;
     };
-    MutableObservable.prototype._triggerOnNext = function (events, subscribers) {
-        events.forEach(function (event) { return subscribers.forEach(function (s) { return s.next(event); }); });
+    MutableObservable.prototype._triggerExecution = function (sequence, subscribers) {
+        var _this = this;
+        subscribers.forEach(function (s) { return _this.executeSubscriber(s, sequence); });
     };
     return MutableObservable;
 }(Observable));

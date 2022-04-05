@@ -3,6 +3,8 @@ import { map } from "../transform/map";
 import {ifElse} from './if-else';
 
 describe('ifElse', () => {
+    it('will succeed', () => expect(true).toBe(true));
+
    it('should return a new observable from the "if" branch', () => {
        const obs$ = new Observable(12);
        const res$ = obs$.pipe(ifElse((x) => x > 0, [map(x => x * 2)]));
