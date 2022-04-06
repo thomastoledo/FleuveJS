@@ -31,7 +31,7 @@ Or, if you'd prefer to work on a vanilla project:
 import { Observable } from 'https://unpkg.com/observablejs@latest/bundle/observable.bundle.js';
 ```
 
-## Observables and MutableObservables
+## Observables, MutableObservables and ObservableForks
 
 `Observables` are objects containing an inner sequence. Their sequence is finite, and they are immutable.
 `MutableObservables` are objects containing an inner sequence too, except this one can be mutated over time. It is infinite, and can be completed with the `.close()` method.
@@ -255,6 +255,13 @@ piped$.subscribe((x) => console.log(x)); // expected to print 24
 
 #### `nth`
 The `nth` operator is used to only retrieve the nth event of an `Observable`. If there are `p` events such as `p < n`, then nothing will ever be emitted. Once the nth event has been emitted, the `Observable` that has been created becomes complete.
+
+
+```ts
+const obs$ = of(11, 12, 13, 14, 15);
+const nth$ = obs$.pipe(nth(3));
+nth$.subscribe((x) => console.log(x)); // will print 13
+```
 
 ## Next Features
 
