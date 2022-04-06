@@ -263,6 +263,16 @@ const nth$ = obs$.pipe(nth(3));
 nth$.subscribe((x) => console.log(x)); // will print 13
 ```
 
+#### `take`
+The `take` operator is used to only retrieve a certain amount of events from an `Observable`.
+Once the number specified is reached, the newly created Observable becomes complete.
+
+```ts
+const obs$ = of(11, 12, 13, 14, 15);
+const nth$ = obs$.pipe(take(3));
+nth$.subscribe((x) => console.log(x)); // will print 11, 12 and finally 13
+```
+
 ## Next Features
 
 ### For pipe / fork / compile
@@ -275,6 +285,7 @@ nth$.subscribe((x) => console.log(x)); // will print 13
 - reduce
 - min
 - max
+- slice
 
 
 ### Static

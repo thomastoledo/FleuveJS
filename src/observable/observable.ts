@@ -84,10 +84,14 @@ export class Observable<T = never> {
         break;
       }
       
-      if (operationResult.isFilterNotMatched() || operationResult.isMustStop()) {
-        return;
+      if (operationResult.isFilterNotMatched()) {
+        continue;
       }
 
+      if (operationResult.isMustStop()) {
+        break;
+      }
+      
       _subscriber.next && _subscriber.next(operationResult.value);
     }
     this._isComplete && _subscriber.complete && _subscriber.complete();
