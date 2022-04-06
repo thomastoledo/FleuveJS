@@ -15,6 +15,10 @@ export class MutableObservable<T = never> extends Observable<T> {
   }
 
   close(): void {
+    if (this._isComplete) {
+      return;
+    }
+
     this._isComplete = true;
     this._subscribers.forEach((s) => {
       if (s.complete) {
@@ -74,7 +78,8 @@ export class MutableObservable<T = never> extends Observable<T> {
         const operationResult = this._executeOperations(events[i], operations);
 
         if (operationResult.isMustStop()) {
-          this.close();
+          this._isComplete = true;
+          newSequence.push(operationResult);
           break;
         }
 
