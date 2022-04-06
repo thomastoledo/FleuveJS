@@ -31,7 +31,7 @@ Or, if you'd prefer to work on a vanilla project:
 import { Observable } from 'https://unpkg.com/observablejs@latest/bundle/observable.bundle.js';
 ```
 
-## Observables and MutableObservables
+## Observables, MutableObservables and ObservableForks
 
 `Observables` are objects containing an inner sequence. Their sequence is finite, and they are immutable.
 `MutableObservables` are objects containing an inner sequence too, except this one can be mutated over time. It is infinite, and can be completed with the `.close()` method.
@@ -253,12 +253,19 @@ const piped$ = obs$.pipe(tap(x => console.log(x), map(x => x * 2))); // expected
 piped$.subscribe((x) => console.log(x)); // expected to print 24
 ```
 
-## Next Features
-### Refactoring incoming
-In the next release, some methods might be moved as static operators. Stay tuned!
+#### `nth`
+The `nth` operator is used to only retrieve the nth event of an `Observable`. If there are `p` events such as `p < n`, then nothing will ever be emitted. Once the nth event has been emitted, the `Observable` that has been created becomes complete.
 
-### Next operators
-#### For pipe / fork / compile
+
+```ts
+const obs$ = of(11, 12, 13, 14, 15);
+const nth$ = obs$.pipe(nth(3));
+nth$.subscribe((x) => console.log(x)); // will print 13
+```
+
+## Next Features
+
+### For pipe / fork / compile
 - nth
 - take
 - once
@@ -272,8 +279,8 @@ In the next release, some methods might be moved as static operators. Stay tuned
 - max
 
 
-#### Static
-##### Functions
+### Static
+#### Functions
 - around
 - before
 - after
@@ -313,20 +320,20 @@ afterDivide$(10, 5);
 whenThrowing$(10, 0);
 ```
 
-##### Creation
+#### Creation
 - compose: to compose finite and infinite Observable creators
 
-##### Asynchronous
+#### Asynchronous
 - websocket
 - promise
 
-##### Replacement
+#### Replacement
 - replace
 - replaceNth
 - replaceN
 - replaceAll
 
-##### Predicates
+#### Predicates
 - or
 - and
 - xor

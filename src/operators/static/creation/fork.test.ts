@@ -1,9 +1,7 @@
-import { subscriberOf } from "../../../models/subscription";
 import { map } from "../../transform/map";
 import { fork } from "./fork";
 import { mutable } from "./mutable";
 import {of} from './of';
-import {filter} from '../../predicates'
 
 describe('fork', () => {
     it('will succeed', () => expect(true).toBe(true));
