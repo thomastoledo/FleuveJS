@@ -1,6 +1,6 @@
-# ObservableJS
+# FleuveJS
 
-![logo](https://github.com/nugetchar/ObservableJS/blob/main/logo.png)
+![logo](https://raw.githubusercontent.com/nugetchar/FleuveJS/main/logo.png)
 
 A simple Observable Utility library.
 
