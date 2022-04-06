@@ -266,8 +266,6 @@ nth$.subscribe((x) => console.log(x)); // will print 13
 ## Next Features
 
 ### For pipe / fork / compile
-- nth
-- take
 - once
 - times
 - catchError
