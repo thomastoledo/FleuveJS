@@ -4,7 +4,6 @@ import { subscriberOf } from "../../models/subscription";
 import { fork, mutable, preProcess } from "../static/creation";
 import { of } from "../static/creation/of";
 import { nth } from "./nth";
-import {map} from '../transform'
 
 describe("nth", () => {
   it("should return a function that will only process the nth event", () => {
@@ -57,10 +56,10 @@ describe("nth", () => {
 
   it("should process the nth element of a MutableObservable", () => {
     const events = [10, 11, 12, 13, 14, 15];
-    const mut$ = preProcess<number>(nth(5), map((x) => x * 2));
+    const mut$ = preProcess<number>(nth(5));
     const completeCb = jest.fn();
     mut$.subscribe(
-      subscriberOf((x) => expect(x).toEqual(28), void 0, completeCb)
+      subscriberOf((x) => expect(x).toEqual(14), void 0, completeCb)
     );
     mut$.next(...events);
     expect(completeCb).toHaveBeenCalledTimes(0);
@@ -69,6 +68,8 @@ describe("nth", () => {
   it("should compile only the second value", () => {
     const mut$ = mutable(10, 20, 30);
     const completeCb = jest.fn();
+
+    mut$.subscribe((x) => expect([10, 20, 30].includes(x)).toEqual(true));
     mut$.compile(nth(2), map((x) => x * 2));
     mut$.subscribe(subscriberOf((x) => expect(x).toEqual(40), void 0, completeCb));
     expect(completeCb).toHaveBeenCalledTimes(0);

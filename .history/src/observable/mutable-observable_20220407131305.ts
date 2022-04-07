@@ -8,18 +8,21 @@ import { Observable } from "./observable";
 
 export class MutableObservable<T = never> extends Observable<T> {
   private _preProcessOperations: OperatorFunction<T, any>[] = [];
+  private _isClosed: boolean;
 
   constructor(...initialSequence: T[]) {
     super(...initialSequence);
     this._isComplete = false;
+    this._isClosed = false;
   }
 
   close(): void {
-    if (this._isComplete) {
+    if (this._isClosed) {
       return;
     }
 
     this._isComplete = true;
+    this._isClosed = true;
     this._subscribers.forEach((s) => {
       if (s.complete) {
         s.complete();
@@ -32,14 +35,15 @@ export class MutableObservable<T = never> extends Observable<T> {
    * @returns this
    */
   compile(...operations: OperatorFunction<T, OperationResult<any>>[]): this {
-    if (this._isComplete) {
+    if (this._isClosed) {
       return this;
     }
 
     const newSequence = this._buildNewSequence(
       this._innerSequence.filter((event) => !event.isOperationError()).map((event) => event.value),
       operations
-    ).filter((event) => !event.isMustStop());
+      );
+      console.log('IS COMPLETE', this._isComplete);
 
     const idxError = newSequence.findIndex((opRes) => opRes.isOperationError());
     if (idxError > -1) {
@@ -55,7 +59,7 @@ export class MutableObservable<T = never> extends Observable<T> {
   }
 
   next(...events: T[]): this {
-    if (this._isComplete) {
+    if (this._isClosed) {
       return this;
     }
 
@@ -75,8 +79,9 @@ export class MutableObservable<T = never> extends Observable<T> {
     for (let i = 0, l = events.length; i < l; i++) {
       try {
         const operationResult = this._executeOperations(events[i], operations);
+
         if (operationResult.isMustStop()) {
-          // this._isComplete = true;
+          this._isComplete = true;
           newSequence.push(operationResult);
           break;
         }

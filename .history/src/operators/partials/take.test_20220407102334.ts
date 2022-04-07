@@ -63,7 +63,7 @@ describe("take", () => {
       subscriberOf((x) => expect(x).not.toEqual(15), void 0, completeCb)
     );
     mut$.next(...events);
-    expect(completeCb).toHaveBeenCalledTimes(0);
+    expect(completeCb).toHaveBeenCalledTimes(1);
   });
 
   it("should compile only two values", () => {

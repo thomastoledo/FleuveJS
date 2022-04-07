@@ -39,7 +39,7 @@ export class MutableObservable<T = never> extends Observable<T> {
     const newSequence = this._buildNewSequence(
       this._innerSequence.filter((event) => !event.isOperationError()).map((event) => event.value),
       operations
-    ).filter((event) => !event.isMustStop());
+    );
 
     const idxError = newSequence.findIndex((opRes) => opRes.isOperationError());
     if (idxError > -1) {
@@ -75,6 +75,7 @@ export class MutableObservable<T = never> extends Observable<T> {
     for (let i = 0, l = events.length; i < l; i++) {
       try {
         const operationResult = this._executeOperations(events[i], operations);
+        console.log('OPERATION RESULT', operationResult);
         if (operationResult.isMustStop()) {
           // this._isComplete = true;
           newSequence.push(operationResult);

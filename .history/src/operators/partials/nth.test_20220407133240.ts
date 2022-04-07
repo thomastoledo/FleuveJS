@@ -69,6 +69,9 @@ describe("nth", () => {
   it("should compile only the second value", () => {
     const mut$ = mutable(10, 20, 30);
     const completeCb = jest.fn();
+
+    const sub = mut$.subscribe((x) => expect([10, 20, 30].includes(x)).toEqual(true));
+    sub.unsubscribe();
     mut$.compile(nth(2), map((x) => x * 2));
     mut$.subscribe(subscriberOf((x) => expect(x).toEqual(40), void 0, completeCb));
     expect(completeCb).toHaveBeenCalledTimes(0);
