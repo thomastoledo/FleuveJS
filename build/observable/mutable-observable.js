@@ -79,7 +79,6 @@ var MutableObservable = /** @class */ (function (_super) {
             try {
                 var operationResult = this._executeOperations(events[i], operations);
                 if (operationResult.isMustStop()) {
-                    // this._isComplete = true;
                     newSequence.push(operationResult);
                     break;
                 }
