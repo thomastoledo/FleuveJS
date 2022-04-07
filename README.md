@@ -273,10 +273,22 @@ const nth$ = obs$.pipe(take(3));
 nth$.subscribe((x) => console.log(x)); // will print 11, 12 and finally 13
 ```
 
+#### `once`
+The `once` operator is use to retrieve only one event from the event sequence of an `Observable`.
+It can accept a predicate function as a parameter, though it is optional.
+
+- without a predicate function, it will only consider the first event to come through, and will then return only `complete` flags;
+- with a predicate function, it will filter out any event not matching the predicate, until the first matchin event. Once it is matched, it will then only return `complete` flags.
+
+Used on a `pipe` method, it will return an `Observable` with at most one event.
+Used on a `compile` method, it will create a new sequence with at most one event. The `MutableObservable` will not be completed.
+Used on a `fork` static operator, it will create a new `ObservableFork` that will accept at most one event.
+Used on a `preProcess` static operator, it will create a new `MutableObservable` which sequences will contain at most only one event.
+
 ## Next Features
 
 ### For pipe / fork / compile
-- once
+- single: check there is only one event matching a predicate
 - times
 - catchError
 - throwError
