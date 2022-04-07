@@ -289,15 +289,16 @@ Used on a `preProcess` static operator, it will create a new `MutableObservable`
 
 ### For pipe / fork / compile
 - single: check there is only one event matching a predicate
-- times
-- catchError
-- throwError
-- debounce
-- throttle
-- reduce
-- min
-- max
-- slice
+- times: check there are n events matching a predicate
+- atLeastTimes: check there are at least n events matching a predicate
+- atMostTimes: check there are at most n events matching a predicate
+- catchError: catch any error and treat it. Prevents onError to be called
+- debounce : debounces the processing of event values
+- throttle : throttles the processing of event values
+- reduce : reduces the Observable sequence to a unique value
+- min : find the min value (with or without predicate)
+- max : find the max value (with or without predicate)
+- slice : returns a section of the Observable sequence (just like the slice method of the Array prototype)
 
 
 ### Static
@@ -307,6 +308,11 @@ Used on a `preProcess` static operator, it will create a new `MutableObservable`
 - after
 - whenThrowing
 - onFunction
+- debounceFn
+- throttleFn
+- onceFn
+- timesFn
+- memoize (under consideration)
 
 Example:
 ```js
