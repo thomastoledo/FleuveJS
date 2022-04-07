@@ -61,16 +61,17 @@ var Observable = /** @class */ (function () {
                 (_subscriber.error || (function () { throw operationResult.error; }))(operationResult.error);
                 return "break";
             }
-            if (operationResult.isFilterNotMatched() || operationResult.isMustStop()) {
-                return { value: void 0 };
+            if (operationResult.isFilterNotMatched()) {
+                return "continue";
+            }
+            if (operationResult.isMustStop()) {
+                return "break";
             }
             _subscriber.next && _subscriber.next(operationResult.value);
         };
         var this_1 = this;
         for (var i = 0, l = sequence.length; i < l; i++) {
             var state_1 = _loop_1(i, l);
-            if (typeof state_1 === "object")
-                return state_1.value;
             if (state_1 === "break")
                 break;
         }

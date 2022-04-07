@@ -28,6 +28,9 @@ var MutableObservable = /** @class */ (function (_super) {
         return _this;
     }
     MutableObservable.prototype.close = function () {
+        if (this._isComplete) {
+            return;
+        }
         this._isComplete = true;
         this._subscribers.forEach(function (s) {
             if (s.complete) {
@@ -47,7 +50,7 @@ var MutableObservable = /** @class */ (function (_super) {
         if (this._isComplete) {
             return this;
         }
-        var newSequence = this._buildNewSequence(this._innerSequence.filter(function (event) { return !event.isOperationError(); }).map(function (event) { return event.value; }), operations);
+        var newSequence = this._buildNewSequence(this._innerSequence.filter(function (event) { return !event.isOperationError(); }).map(function (event) { return event.value; }), operations).filter(function (event) { return !event.isMustStop(); });
         var idxError = newSequence.findIndex(function (opRes) { return opRes.isOperationError(); });
         if (idxError > -1) {
             this._innerSequence = newSequence.slice(0, idxError);
@@ -56,8 +59,7 @@ var MutableObservable = /** @class */ (function (_super) {
             this._triggerExecution([newSequence[idxError]], this._subscribers);
             return this;
         }
-        this.next.apply(this, (this._innerSequence = newSequence).map(function (event) { return event.value; }));
-        return this;
+        return this.next.apply(this, (this._innerSequence = newSequence).map(function (event) { return event.value; }));
     };
     MutableObservable.prototype.next = function () {
         var events = [];
@@ -77,7 +79,7 @@ var MutableObservable = /** @class */ (function (_super) {
             try {
                 var operationResult = this._executeOperations(events[i], operations);
                 if (operationResult.isMustStop()) {
-                    this.close();
+                    newSequence.push(operationResult);
                     break;
                 }
                 if (!operationResult.isFilterNotMatched()) {

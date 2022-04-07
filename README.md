@@ -273,19 +273,32 @@ const nth$ = obs$.pipe(take(3));
 nth$.subscribe((x) => console.log(x)); // will print 11, 12 and finally 13
 ```
 
+#### `once`
+The `once` operator is use to retrieve only one event from the event sequence of an `Observable`.
+It can accept a predicate function as a parameter, though it is optional.
+
+- without a predicate function, it will only consider the first event to come through, and will then return only `complete` flags;
+- with a predicate function, it will filter out any event not matching the predicate, until the first matchin event. Once it is matched, it will then only return `complete` flags.
+
+Used on a `pipe` method, it will return an `Observable` with at most one event.
+Used on a `compile` method, it will create a new sequence with at most one event. The `MutableObservable` will not be completed.
+Used on a `fork` static operator, it will create a new `ObservableFork` that will accept at most one event.
+Used on a `preProcess` static operator, it will create a new `MutableObservable` which sequences will contain at most only one event.
+
 ## Next Features
 
 ### For pipe / fork / compile
-- once
-- times
-- catchError
-- throwError
-- debounce
-- throttle
-- reduce
-- min
-- max
-- slice
+- single: check there is only one event matching a predicate
+- times: check there are n events matching a predicate
+- atLeastTimes: check there are at least n events matching a predicate
+- atMostTimes: check there are at most n events matching a predicate
+- catchError: catch any error and treat it. Prevents onError to be called
+- debounce : debounces the processing of event values
+- throttle : throttles the processing of event values
+- reduce : reduces the Observable sequence to a unique value
+- min : find the min value (with or without predicate)
+- max : find the max value (with or without predicate)
+- slice : returns a section of the Observable sequence (just like the slice method of the Array prototype)
 
 
 ### Static
@@ -295,6 +308,11 @@ nth$.subscribe((x) => console.log(x)); // will print 11, 12 and finally 13
 - after
 - whenThrowing
 - onFunction
+- debounceFn
+- throttleFn
+- onceFn
+- timesFn
+- memoize (under consideration)
 
 Example:
 ```js

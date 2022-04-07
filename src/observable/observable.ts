@@ -77,7 +77,6 @@ export class Observable<T = never> {
   ): void {
     for (let i = 0, l = sequence.length; i < l; i++) {
       let operationResult = sequence[i];
-
       if (operationResult.isOperationError()) {
         this._error = operationResult.error as Error;
         (_subscriber.error || (() => {throw operationResult.error}))(operationResult.error as Error);
@@ -94,6 +93,7 @@ export class Observable<T = never> {
       
       _subscriber.next && _subscriber.next(operationResult.value);
     }
+
     this._isComplete && _subscriber.complete && _subscriber.complete();
   }
 
