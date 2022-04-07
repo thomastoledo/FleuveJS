@@ -76,7 +76,6 @@ export class MutableObservable<T = never> extends Observable<T> {
       try {
         const operationResult = this._executeOperations(events[i], operations);
         if (operationResult.isMustStop()) {
-          // this._isComplete = true;
           newSequence.push(operationResult);
           break;
         }
