@@ -4,7 +4,7 @@
   "description": "A simple JavaScript Library for Observables",
   "main": "build/index.js",
   "scripts": {
-    "build": "tsc --project tsconfig.json && npx webpack",
+    "build": "rm -rf ./build && tsc --project tsconfig.json && npx webpack",
     "test": "jest"
   },
   "repository": {
