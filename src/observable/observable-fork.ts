@@ -8,8 +8,9 @@ import {
   subscriberOf,
   Subscription,
 } from "../models/subscription";
+import { Types } from "../models";
 
-export class ObservableFork<T> extends Observable<T> {
+export class ObservableFork<T> extends Observable<T> implements Types.ObservableFork<T> {
   private subscriptions: Subscription[] = [];
   private operators: OperatorFunction<T, OperationResult<any>>[] = [];
 

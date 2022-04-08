@@ -14,7 +14,9 @@ import {
   Subscription,
 } from "../models/subscription";
 
-export class Observable<T = never> {
+import {Types} from '../models/types';
+
+export class Observable<T = never> implements Types.Observable<T> {
 
   protected _innerSequence: OperationResult<T>[];
   protected _subscribers: Subscriber<T>[] = [];

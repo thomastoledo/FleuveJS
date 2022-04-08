@@ -1,8 +1,8 @@
-import {Observable, map, filter} from '../../bundle/observable.bundle.js';
+import {map, filter, of} from '../../bundle/observable.bundle.js';
 
 
 const result = document.getElementById('results');
-const obs$ = new Observable(12);
+const obs$ = of(12);
 
 obs$.pipe(map(x => x * 2)).subscribe((value) => result.innerText += `Mapped value is ${value}`);
 obs$.pipe(filter(x => x > 1000)).subscribe((value) => result.innerText += `\nFiltered value is ${value}`);

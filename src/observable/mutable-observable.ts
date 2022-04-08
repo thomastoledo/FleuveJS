@@ -4,9 +4,10 @@ import {
   OperationResultFlag,
 } from "../models/operator";
 import { Subscriber } from "../models/subscription";
+import { Types } from "../models/types";
 import { Observable } from "./observable";
 
-export class MutableObservable<T = never> extends Observable<T> {
+export class MutableObservable<T = never> extends Observable<T> implements Types.MutableObservable<T> {
   private _preProcessOperations: OperatorFunction<T, any>[] = [];
 
   constructor(...initialSequence: T[]) {
