@@ -3,7 +3,7 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from) {
         to[j] = from[i];
     return to;
 };
-import { MutableObservable } from "../../../observable";
+import { MutableObservable } from "../../../observable/mutable-observable";
 export var mutable = function () {
     var values = [];
     for (var _i = 0; _i < arguments.length; _i++) {

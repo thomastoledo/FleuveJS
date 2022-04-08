@@ -3,7 +3,7 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from) {
         to[j] = from[i];
     return to;
 };
-import { ObservableFork } from "../../../observable";
+import { ObservableFork } from "../../../observable/observable-fork";
 export var fork = function (obs) {
     var operators = [];
     for (var _i = 1; _i < arguments.length; _i++) {

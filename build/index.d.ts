@@ -1,2 +1,2 @@
-export * from './observable';
-export * from './operators';
+export * from "./models/types";
+export * from "./operators";
