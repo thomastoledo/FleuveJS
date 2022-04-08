@@ -1,5 +1,6 @@
 import { OperationResult, OperatorFunction } from "../../../models/operator";
-import { Observable, ObservableFork } from "../../../observable";
+import { Observable } from "../../../observable/observable";
+import { ObservableFork } from "../../../observable/observable-fork";
 
 export const fork = function <T = never>(
   obs: Observable<T>,

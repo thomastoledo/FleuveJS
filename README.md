@@ -80,6 +80,7 @@ obs$.subscribe(subscriberOf((x) => console.log(x)));
 
 ```
 ### Add an event listener
+*Do not use anymore: will be deprecated and maybe replaced by a better implementation.*
 You can bind users interactions to an Observable.
 
 ```html

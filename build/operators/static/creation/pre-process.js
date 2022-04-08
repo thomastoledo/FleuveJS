@@ -1,4 +1,4 @@
-import { MutableObservable } from "../../../observable";
+import { MutableObservable } from "../../../observable/mutable-observable";
 export function preProcess() {
     var _a;
     var operations = [];

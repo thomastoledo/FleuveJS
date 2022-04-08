@@ -1,6 +1,7 @@
 import { OperationResult, OperatorFunction } from "../models/operator";
 import { OnNext, Subscriber, Subscription } from "../models/subscription";
-export declare class Observable<T = never> {
+import { Types } from '../models/types';
+export declare class Observable<T = never> implements Types.Observable<T> {
     protected _innerSequence: OperationResult<T>[];
     protected _subscribers: Subscriber<T>[];
     protected _isComplete: boolean;
