@@ -18,8 +18,11 @@ export namespace Types {
   export interface ObservableFork<T = never> extends Observable<T> {
     close(): void;
   }
+
+  export interface PromiseObservable<T = never> extends Observable<T> {}
 }
 
 export type Observable<T> = Types.Observable<T>;
 export type MutableObservable<T> = Types.MutableObservable<T>;
 export type ObservableFork<T> = Types.ObservableFork<T>;
+export type PromiseObservable<T> = Types.PromiseObservable<T>;

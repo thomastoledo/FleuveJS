@@ -1,7 +1,8 @@
+import { Types } from "../models";
 import { OperationResult, OperationResultFlag } from "../models/operator";
 import { Observable } from "./observable";
 
-export class PromiseObservable<T> extends Observable<T> {
+export class PromiseObservable<T> extends Observable<T> implements Types.PromiseObservable<T> {
     constructor(promise: Promise<T>) {
         super();
         promise

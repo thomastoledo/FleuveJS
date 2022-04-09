@@ -29,6 +29,7 @@
     "@types/jest": "^26.0.23",
     "exports-loader": "^3.0.0",
     "jest": "^27.0.6",
+    "jest-fetch-mock": "^3.0.3",
     "ts-jest": "^27.0.3",
     "ts-loader": "^9.2.3",
     "tsconfig-paths-webpack-plugin": "^3.5.1",
