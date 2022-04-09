@@ -66,7 +66,7 @@ const obs$ = of(12);
 obs$.subscribe({
     next: (value) => console.log(value), 
     error: (err) => console.error(err), 
-    compleyte: () => console.log('observable complete')
+    complete: () => console.log('observable complete')
 });
 
 const empty$ = of();

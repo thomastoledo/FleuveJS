@@ -1,5 +1,5 @@
-import { get } from './get';
-export var Http;
-(function (Http) {
-    Http.GET = get;
-})(Http || (Http = {}));
+import { get as GET } from './get';
+export var http;
+(function (http) {
+    http.get = GET;
+})(http || (http = {}));

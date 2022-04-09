@@ -1,2 +1,2 @@
 export * from './creation';
-export {Http} from './http';
+export {http} from './http';

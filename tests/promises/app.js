@@ -1,6 +1,6 @@
-import {Http} from '../../bundle/observable.bundle.js';
+import {http} from '../../bundle/observable.bundle.js';
 
-const obs$ = Http.GET('./test.json');
+const obs$ = http.get('./test.json');
 obs$.subscribe((res) => {
     console.log(res);
     document.getElementById('results').innerText = res;
