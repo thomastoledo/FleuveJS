@@ -1,4 +1,4 @@
-import {http} from '../../bundle/observable.bundle.js';
+import {http, map} from '../../bundle/observable.bundle.js';
 
 const obs$ = http.get('./test.json');
 obs$.subscribe((res) => {
