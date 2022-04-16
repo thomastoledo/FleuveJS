@@ -13,22 +13,51 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-import { OperationResult, OperationResultFlag } from "../models/operator";
+var __spreadArray = (this && this.__spreadArray) || function (to, from) {
+    for (var i = 0, il = from.length, j = to.length; i < il; i++, j++)
+        to[j] = from[i];
+    return to;
+};
+import { isFunction } from "../helpers/function.helper";
+import { isInstanceOfSubscriber, subscriberOf, Subscription, } from "../models";
+import { OperationResult, OperationResultFlag, } from "../models/operator";
+import { fork } from "../operators";
 import { Observable } from "./observable";
 var PromiseObservable = /** @class */ (function (_super) {
     __extends(PromiseObservable, _super);
     function PromiseObservable(promise) {
         var _this = _super.call(this) || this;
-        promise
+        _this.promise = promise
             .then(function (res) {
             _this._innerSequence.push(new OperationResult(res));
         })
             .catch(function (err) {
             _this._innerSequence.push(new OperationResult(void 0, OperationResultFlag.OperationError, err));
-        })
-            .finally(function () { return _this._subscribers.forEach(function (s) { return _this.executeSubscriber(s, _this._innerSequence); }); });
+        });
         return _this;
     }
+    PromiseObservable.prototype.pipe = function () {
+        var operations = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            operations[_i] = arguments[_i];
+        }
+        return fork.apply(void 0, __spreadArray([this], operations));
+    };
+    PromiseObservable.prototype.subscribe = function (subscriber) {
+        var _this = this;
+        if (!isFunction(subscriber) && !isInstanceOfSubscriber(subscriber)) {
+            throw new Error("Please provide either a function or a Subscriber");
+        }
+        var _subscriber = !isInstanceOfSubscriber(subscriber)
+            ? subscriberOf(subscriber)
+            : subscriber;
+        this._subscribers.push(_subscriber);
+        var handler = function () { return _this.executeSubscriber(_subscriber, _this._innerSequence); };
+        this.promise.then(handler);
+        return new Subscription(function () {
+            return (_this._subscribers = _this._subscribers.filter(function (s) { return s !== subscriber; }));
+        });
+    };
     return PromiseObservable;
 }(Observable));
 export { PromiseObservable };

@@ -10,19 +10,18 @@ describe("PromiseObservable", () => {
       });
     });
     
-    it("should create a new PromiseObservable with a rejected value", async () => {
+    it("should create a new PromiseObservable with a rejected value", (done) => {
       const obs$ = new PromiseObservable<number>(Promise.reject(new Error('rejected')));
+      expect.assertions(1);
       const errorCallback = jest.fn((err) => {
-        console.log('SALUT LES GARS')
-        expect(err).toEqual(new Error('rejected'))
+        expect(err).toEqual(new Error('rejected'));
+        done();
       });
+      
       obs$.subscribe({
         next: () => fail(`Next callback should not have been called`),
         error: errorCallback
       });
-
-      console.log('OUI')
-      expect(errorCallback).toHaveBeenNthCalledWith(1, new Error('rejected'));
     });
   });
 

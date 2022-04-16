@@ -1,3 +1,3 @@
 export declare namespace http {
-    const get: <T = never>(url: string) => import("../../../observable/promise-observable").PromiseObservable<Response>;
+    const get: <T = any>(url: string, options?: import("./get").HttpGetOptions) => import("../../../observable/promise-observable").PromiseObservable<string | Blob | T>;
 }

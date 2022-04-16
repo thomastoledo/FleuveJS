@@ -1,7 +1,12 @@
 {
     "users": [
-        {
-            "username": "nugetchar"
-        }
+        { "username": "nugetchar" },
+        { "username": "jdo08" },
+        { "username": "dsburry" },
+        { "username": "soulCoding_" },
+        { "username": "Chart_of" },
+        { "username": "un77" },
+        { "username": "rbmoura" },
+        { "username": "little_pea" }
     ]
 }
