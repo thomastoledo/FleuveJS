@@ -6,7 +6,23 @@ import { Observable } from "./observable";
 import { Subscription } from "../models/subscription";
 
 describe("ObservableFork", () => {
-  it("will succeed", () => expect(true).toBe(true));
+
+  describe('creation', () => {
+    it('should trigger the error callback of subscribers', () => {
+      const source$ = of(12).pipe(map(() => {throw new Error('error')}));
+      const obs$ = fork(source$);
+      const errorCb = jest.fn((err) => expect(err).toEqual(new Error('error')));
+      obs$.subscribe({error: errorCb});
+      expect(errorCb).toHaveBeenNthCalledWith(1, new Error('error'));
+    });
+
+    it('should trigger the complete callback of subscribers', () => {
+      const obs$ = fork(of(12));
+      const completeCb = jest.fn();
+      obs$.subscribe({complete: completeCb});
+      expect(completeCb).toHaveBeenNthCalledWith(1);
+    });
+  });
 
   describe("close", () => {
     it("should stop forked Observables", (done) => {

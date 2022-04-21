@@ -8,7 +8,6 @@ import { fail } from "../helpers/function.helper";
 import { mutable } from "../operators";
 
 describe("MutableObservable", () => {
-  it("will succeed", () => expect(true).toBe(true));
   describe("compile", () => {
     it("should execute each function", () => {
       const operations: OperatorFunction<number, OperationResult<any>>[] = [
@@ -156,6 +155,16 @@ describe("MutableObservable", () => {
       expect(subscriber1.next).not.toHaveBeenCalled();
       expect(subscriber2.next).not.toHaveBeenCalled();
     });
+
+    it('should return without doing anything', () => {
+      const obs$ = mutable<number>().close();
+      const spyBuildNewSequence = jest.spyOn((obs$ as any), '_buildNewSequence');
+      const spyTriggerExecution = jest.spyOn((obs$ as any), '_triggerExecution');
+
+      obs$.next(12);
+        expect(spyBuildNewSequence).not.toHaveBeenCalled();
+        expect(spyTriggerExecution).not.toHaveBeenCalled();
+    });
   });
 
   describe("close", () => {
@@ -168,6 +177,14 @@ describe("MutableObservable", () => {
       });
       obs$.close();
       expect(completeCb).toHaveBeenCalledTimes(1);
+    });
+
+    it('should do nothing if the Observable is already closed', () => {
+      const obs$ = mutable<number>().close();
+      const completeCb = jest.fn();
+      obs$.subscribe({complete: completeCb});
+      obs$.close();
+      expect(completeCb).toBeCalledTimes(1);
     });
   });
 });

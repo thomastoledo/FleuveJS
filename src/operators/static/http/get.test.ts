@@ -1,16 +1,18 @@
 
-// import fetchMock from "jest-fetch-mock";
-
-// fetchMock.enableMocks();
+import fetchMock from "jest-fetch-mock";
 
 describe('http.get', () => {
 
-    it('should return something', () => {
-    //     fetchMock.mockResponseOnce(JSON.stringify({ rates: { CAD: 1.42 } }));
+    describe('creation', () => {
+        it('should return a PromiseObservable')
+    });
 
-    //     const rate = await convert("USD", "CAD");
+    it('should return something', async () => {
+        fetchMock.mockResponseOnce(JSON.stringify({ rates: { CAD: 1.42 } }));
+
+        const rate = await convert("USD", "CAD");
       
-    //     expect(rate).toEqual(1.42);
-    //     expect(fetch).toHaveBeenCalledTimes(1);
+        expect(rate).toEqual(1.42);
+        expect(fetch).toHaveBeenCalledTimes(1);
     });
 });

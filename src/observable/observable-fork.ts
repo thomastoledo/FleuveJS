@@ -1,8 +1,14 @@
 import { Observable } from "./observable";
 import { isFunction } from "../helpers/function.helper";
-import { OperatorFunction, OperationResult, OperationResultFlag } from "../models/operator";
+import {
+  OperatorFunction,
+  OperationResult,
+  OperationResultFlag,
+} from "../models/operator";
 import {
   isInstanceOfSubscriber,
+  OnComplete,
+  OnError,
   OnNext,
   Subscriber,
   subscriberOf,
@@ -10,7 +16,10 @@ import {
 } from "../models/subscription";
 import { Types } from "../models";
 
-export class ObservableFork<T> extends Observable<T> implements Types.ObservableFork<T> {
+export class ObservableFork<T>
+  extends Observable<T>
+  implements Types.ObservableFork<T>
+{
   private subscriptions: Subscription[] = [];
   private operators: OperatorFunction<T, OperationResult<any>>[] = [];
 
@@ -24,31 +33,32 @@ export class ObservableFork<T> extends Observable<T> implements Types.Observable
 
     this.sourceObs$.subscribe({
       next: (value) => {
-        this._subscribers.forEach(
-          (s) =>
-            {
-              if (s.next) {
-                const result = this._executeOperations<T, T>(value, operators);
-                if (!result.isFilterNotMatched() && !result.isMustStop()) {
-                  return s.next(result.value)
-                }
+        this._subscribers
+          .filter((s) => s.next)
+          .forEach((s) => {
+            const result = this._executeOperations<T, T>(value, operators);
+            if (!result.isFilterNotMatched() && !result.isMustStop()) {
+              return (s.next as OnNext<T>)(result.value);
+            }
 
-                if (result.isMustStop()) {
-                  this.close();
-                }
-              } 
-          }
-        );
+            if (result.isMustStop()) {
+              this.close();
+            }
+          });
       },
       error: (err) => {
         this._error = err;
-        this._subscribers.forEach((s) => s.error && s.error(err));
+        this._subscribers
+          .filter((s) => s.error)
+          .forEach((s) => (s.error as OnError)(err));
       },
 
       complete: () => {
         this._isComplete = true;
         this.unsubscribe();
-        this._subscribers.forEach((s) => s.complete && s.complete());
+        this._subscribers
+          .filter((s) => s.complete)
+          .forEach((s) => (s.complete as OnComplete)());
       },
     });
   }
@@ -65,20 +75,28 @@ export class ObservableFork<T> extends Observable<T> implements Types.Observable
     this._subscribers.push(_subscriber);
 
     const newSequence: OperationResult<T>[] = [];
-    const sourceSequence = (this.sourceObs$ as any)._innerSequence; // FIXME ew
-    for (let i = 0, l = sourceSequence.length; i < l; i++ ) {
+    const sourceSequence = (this.sourceObs$ as any)._innerSequence as OperationResult<T>[]; // FIXME ew
+    for (let i = 0, l = sourceSequence.length; i < l; i++) {
       try {
-        newSequence.push(this._executeOperations(sourceSequence[i].value, this.operators));
+        if (sourceSequence[i].isOperationError()) {
+          throw sourceSequence[i].error;
+        }
+        newSequence.push(
+          this._executeOperations(sourceSequence[i].value, this.operators)
+        );
       } catch (error) {
-        newSequence.push(new OperationResult(sourceSequence[i].value, OperationResultFlag.OperationError, error as Error));
+        newSequence.push(
+          new OperationResult(
+            sourceSequence[i].value,
+            OperationResultFlag.OperationError,
+            error as Error
+          )
+        );
         i = l;
       }
     }
 
-    this.executeSubscriber(
-      _subscriber,
-      newSequence
-    );
+    this.executeSubscriber(_subscriber, newSequence);
 
     return new Subscription(
       () =>
