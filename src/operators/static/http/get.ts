@@ -1,30 +1,25 @@
 
 import { PromiseObservable } from "../../../observable/promise-observable";
   
-export interface HttpGetOptions {
-  type: 'text' | 'json' | 'blob';
-  queryParams: {[k: string]: any}
-}
+export type GetResultOption = 'text' | 'json' | 'blob';
 
   export const get = function<T = any>(
-    url: string, 
-    options: HttpGetOptions = {
-      queryParams: {},
-      type: 'json'
-    }
+    url: RequestInfo,
+    type: GetResultOption = 'json',
+    init?: RequestInit | undefined, 
   ): PromiseObservable<T | string | Blob>{
     return new PromiseObservable<T | string | Blob>(new Promise((resolve, reject) => {
-      fetch(url)
+      fetch(url, init)
       .then((res) => {
-        if (options.type === 'json') {
+        if (type === 'json') {
           return resolve(res.json());
         }
 
-        if (options.type === 'text') {
+        if (type === 'text') {
           return resolve(res.text());
         }
 
-        if (options.type === 'blob') {
+        if (type === 'blob') {
           return resolve(res.blob());
         }
       })
