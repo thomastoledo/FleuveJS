@@ -3,11 +3,14 @@ import {
   OperationResult,
   OperationResultFlag,
 } from "../models/operator";
-import { Subscriber } from "../models/subscription";
+import { OnComplete, Subscriber } from "../models/subscription";
 import { Types } from "../models/types";
 import { Observable } from "./observable";
 
-export class MutableObservable<T = never> extends Observable<T> implements Types.MutableObservable<T> {
+export class MutableObservable<T = never>
+  extends Observable<T>
+  implements Types.MutableObservable<T>
+{
   private _preProcessOperations: OperatorFunction<T, any>[] = [];
 
   constructor(...initialSequence: T[]) {
@@ -15,17 +18,19 @@ export class MutableObservable<T = never> extends Observable<T> implements Types
     this._isComplete = false;
   }
 
-  close(): void {
+  close(): this {
     if (this._isComplete) {
-      return;
+      return this;
     }
 
     this._isComplete = true;
-    this._subscribers.forEach((s) => {
-      if (s.complete) {
-        s.complete();
-      }
-    });
+    this._subscribers
+      .filter((s) => s.complete)
+      .forEach((s) => {
+        (s.complete as OnComplete)();
+      });
+
+    return this;
   }
 
   /**
@@ -38,7 +43,9 @@ export class MutableObservable<T = never> extends Observable<T> implements Types
     }
 
     const newSequence = this._buildNewSequence(
-      this._innerSequence.filter((event) => !event.isOperationError()).map((event) => event.value),
+      this._innerSequence
+        .filter((event) => !event.isOperationError())
+        .map((event) => event.value),
       operations
     ).filter((event) => !event.isMustStop());
 
@@ -52,7 +59,9 @@ export class MutableObservable<T = never> extends Observable<T> implements Types
       return this;
     }
 
-    return this.next(...(this._innerSequence = newSequence).map((event) => event.value));
+    return this.next(
+      ...(this._innerSequence = newSequence).map((event) => event.value)
+    );
   }
 
   next(...events: T[]): this {

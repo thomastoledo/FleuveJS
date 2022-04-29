@@ -4,7 +4,7 @@ import { Observable } from "./observable";
 export declare class MutableObservable<T = never> extends Observable<T> implements Types.MutableObservable<T> {
     private _preProcessOperations;
     constructor(...initialSequence: T[]);
-    close(): void;
+    close(): this;
     /**
      * @param operations
      * @returns this
