@@ -29,14 +29,15 @@ var MutableObservable = /** @class */ (function (_super) {
     }
     MutableObservable.prototype.close = function () {
         if (this._isComplete) {
-            return;
+            return this;
         }
         this._isComplete = true;
-        this._subscribers.forEach(function (s) {
-            if (s.complete) {
-                s.complete();
-            }
+        this._subscribers
+            .filter(function (s) { return s.complete; })
+            .forEach(function (s) {
+            s.complete();
         });
+        return this;
     };
     /**
      * @param operations
@@ -50,7 +51,9 @@ var MutableObservable = /** @class */ (function (_super) {
         if (this._isComplete) {
             return this;
         }
-        var newSequence = this._buildNewSequence(this._innerSequence.filter(function (event) { return !event.isOperationError(); }).map(function (event) { return event.value; }), operations).filter(function (event) { return !event.isMustStop(); });
+        var newSequence = this._buildNewSequence(this._innerSequence
+            .filter(function (event) { return !event.isOperationError(); })
+            .map(function (event) { return event.value; }), operations).filter(function (event) { return !event.isMustStop(); });
         var idxError = newSequence.findIndex(function (opRes) { return opRes.isOperationError(); });
         if (idxError > -1) {
             this._innerSequence = newSequence.slice(0, idxError);

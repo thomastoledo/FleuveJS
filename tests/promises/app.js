@@ -1,6 +1,6 @@
-import {http, map} from '../../bundle/observable.bundle.js';
+import {http, map, tap} from '../../bundle/observable.bundle.js';
 
-const obs$ = http.get('./test.json').pipe(map(({users}) => users));
+const obs$ = http.get('./test.json', 'blob').pipe(tap(res => console.log(res)), map(({users}) => users));
 obs$.subscribe((res) => {
     buildDOMUserList(document.getElementById('results'), res)
 });

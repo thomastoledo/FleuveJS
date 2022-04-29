@@ -15,7 +15,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 import { Observable } from "./observable";
 import { isFunction } from "../helpers/function.helper";
-import { OperationResult, OperationResultFlag } from "../models/operator";
+import { OperationResult, OperationResultFlag, } from "../models/operator";
 import { isInstanceOfSubscriber, subscriberOf, Subscription, } from "../models/subscription";
 var ObservableFork = /** @class */ (function (_super) {
     __extends(ObservableFork, _super);
@@ -32,26 +32,30 @@ var ObservableFork = /** @class */ (function (_super) {
         _this._isComplete = sourceObs$._isComplete;
         _this.sourceObs$.subscribe({
             next: function (value) {
-                _this._subscribers.forEach(function (s) {
-                    if (s.next) {
-                        var result = _this._executeOperations(value, operators);
-                        if (!result.isFilterNotMatched() && !result.isMustStop()) {
-                            return s.next(result.value);
-                        }
-                        if (result.isMustStop()) {
-                            _this.close();
-                        }
+                _this._subscribers
+                    .filter(function (s) { return s.next; })
+                    .forEach(function (s) {
+                    var result = _this._executeOperations(value, operators);
+                    if (!result.isFilterNotMatched() && !result.isMustStop()) {
+                        return s.next(result.value);
+                    }
+                    if (result.isMustStop()) {
+                        _this.close();
                     }
                 });
             },
             error: function (err) {
                 _this._error = err;
-                _this._subscribers.forEach(function (s) { return s.error && s.error(err); });
+                _this._subscribers
+                    .filter(function (s) { return s.error; })
+                    .forEach(function (s) { return s.error(err); });
             },
             complete: function () {
                 _this._isComplete = true;
                 _this.unsubscribe();
-                _this._subscribers.forEach(function (s) { return s.complete && s.complete(); });
+                _this._subscribers
+                    .filter(function (s) { return s.complete; })
+                    .forEach(function (s) { return s.complete(); });
             },
         });
         return _this;
@@ -69,6 +73,9 @@ var ObservableFork = /** @class */ (function (_super) {
         var sourceSequence = this.sourceObs$._innerSequence; // FIXME ew
         for (var i = 0, l = sourceSequence.length; i < l; i++) {
             try {
+                if (sourceSequence[i].isOperationError()) {
+                    throw sourceSequence[i].error;
+                }
                 newSequence.push(this._executeOperations(sourceSequence[i].value, this.operators));
             }
             catch (error) {

@@ -11,17 +11,14 @@ export type GetResultOption = 'text' | 'json' | 'blob';
     return new PromiseObservable<T | string | Blob>(new Promise((resolve, reject) => {
       fetch(url, init)
       .then((res) => {
-        if (type === 'json') {
-          return resolve(res.json());
-        }
-
         if (type === 'text') {
           return resolve(res.text());
         }
-
+        
         if (type === 'blob') {
           return resolve(res.blob());
         }
+        return resolve(res.json());
       })
       .catch((err) => reject(err));
     }));

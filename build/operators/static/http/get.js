@@ -1,8 +1,8 @@
 import { PromiseObservable } from "../../../observable/promise-observable";
-export var get = function (url, init, type) {
+export var get = function (url, type, init) {
     if (type === void 0) { type = 'json'; }
     return new PromiseObservable(new Promise(function (resolve, reject) {
-        fetch(url)
+        fetch(url, init)
             .then(function (res) {
             if (type === 'json') {
                 return resolve(res.json());
