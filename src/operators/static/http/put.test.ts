@@ -1,7 +1,7 @@
-import { post } from "./post";
+import { put } from "./put";
 import fetchMock from "jest-fetch-mock";
 
-describe("http.post", () => {
+describe("http.put", () => {
   fetchMock.enableMocks();
   beforeEach(() => {
     (fetch as any).resetMocks();
@@ -11,7 +11,7 @@ describe("http.post", () => {
     const expectedResult = { products: [newProduct] };
     (fetch as any).mockResponseOnce(JSON.stringify(expectedResult));
 
-    post("toto.com", {
+    put("toto.com", {
       body: JSON.stringify(newProduct),
       type: "json",
     }).subscribe((x) => {
@@ -22,7 +22,7 @@ describe("http.post", () => {
 
   it("should return a PromiseObservable with a rejected promise", (done) => {
     (fetch as any).mockReject(() => Promise.reject("API is down"));
-    post("toto.com", { type: "json" }).subscribe({
+    put("toto.com", { type: "json" }).subscribe({
       error: (x) => {
         expect(x).toEqual("API is down");
         done();
@@ -32,17 +32,17 @@ describe("http.post", () => {
 
   it("should return a PromiseObservable with a resolved promise JSON", (done) => {
     (fetch as any).mockResponseOnce(JSON.stringify({ products: [] }));
-    post("toto.com", { type: "json" }).subscribe((x) => {
+    put("toto.com", { type: "json" }).subscribe((x) => {
       expect(x).toEqual({ products: [] });
       done();
     });
   });
 
-  it("should return a PromiseObservable with a resolve promise as text", (done) => {
+  it("should return a PromiseObservable with a resolved promise as text", (done) => {
     const newProduct = { id: "1", name: "product1" };
     const expectedResult = { products: [newProduct] };
     (fetch as any).mockResponseOnce(JSON.stringify(expectedResult));
-    post("toto.com", {
+    put("toto.com", {
       body: JSON.stringify(newProduct),
       type: "text",
     }).subscribe((x) => {
@@ -55,7 +55,7 @@ describe("http.post", () => {
     const newProduct = { id: "1", name: "product1" };
     const expectedResult = { products: [newProduct] };
     (fetch as any).mockResponseOnce(JSON.stringify(expectedResult));
-    post("toto.com", {
+    put("toto.com", {
       body: JSON.stringify(newProduct),
       type: "blob",
     }).subscribe(async (x: Blob) => {
