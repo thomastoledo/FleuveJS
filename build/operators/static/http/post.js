@@ -10,10 +10,10 @@ var __assign = (this && this.__assign) || function () {
     return __assign.apply(this, arguments);
 };
 import { PromiseObservable } from "../../../observable/promise-observable";
-export var get = function (url, type, init) {
+export var post = function (url, type, init) {
     if (type === void 0) { type = 'json'; }
     return new PromiseObservable(new Promise(function (resolve, reject) {
-        fetch(url, __assign(__assign({}, init), { method: 'GET' }))
+        fetch(url, __assign(__assign({}, init), { method: 'POST' }))
             .then(function (res) {
             if (type === 'text') {
                 return resolve(res.text());

@@ -46,9 +46,9 @@ export class MutableObservable<T = never>
       this._innerSequence
         .filter((event) => !event.isOperationError())
         .map((event) => event.value),
-      operations
+      [...operations, ...this._preProcessOperations]
     ).filter((event) => !event.isMustStop());
-
+    
     const idxError = newSequence.findIndex((opRes) => opRes.isOperationError());
     if (idxError > -1) {
       this._innerSequence = newSequence.slice(0, idxError);
@@ -59,9 +59,9 @@ export class MutableObservable<T = never>
       return this;
     }
 
-    return this.next(
-      ...(this._innerSequence = newSequence).map((event) => event.value)
-    );
+    this._triggerExecution(this._innerSequence = newSequence, this._subscribers);
+    
+    return this;
   }
 
   next(...events: T[]): this {
