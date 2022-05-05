@@ -6,7 +6,7 @@ export type GetResultOption = 'text' | 'json' | 'blob';
   export const post = function<T = any>(
     url: RequestInfo,
     type: GetResultOption = 'json',
-    init?: RequestInit | undefined, 
+    init: RequestInit, 
   ): PromiseObservable<T | string | Blob>{
     return new PromiseObservable<T | string | Blob>(new Promise((resolve, reject) => {
       fetch(url, {...init, method: 'POST'})

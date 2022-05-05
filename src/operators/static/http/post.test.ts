@@ -7,24 +7,19 @@ describe("http.post", () => {
     (fetch as any).resetMocks();
   });
   it("should return a PromiseObservable with a resolved promise", (done) => {
-    (fetch as any).mockResponseOnce(JSON.stringify({ products: [] }));
-    post("toto.com", "json").subscribe((x) => {
-      expect(x).toEqual({ products: [] });
-      done();
-    });
-  });
+    const newProduct = {id: '1', name: 'product1'};
+    const expectedResult = {products: [newProduct]};
+    (fetch as any).mockResponseOnce(JSON.stringify(expectedResult));
 
-  it("should return a PromiseObservable with a resolved promise JSON", (done) => {
-    (fetch as any).mockResponseOnce(JSON.stringify({ products: [] }));
-    post("toto.com").subscribe((x) => {
-      expect(x).toEqual({ products: [] });
+    post("toto.com", "json", {body: JSON.stringify(newProduct)}).subscribe((x) => {
+      expect(x).toEqual(expectedResult);
       done();
     });
   });
 
   it("should return a PromiseObservable with a rejected promise", (done) => {
     (fetch as any).mockReject(() => Promise.reject("API is down"));
-    post("toto.com", "json").subscribe({
+    post("toto.com", "json", {}).subscribe({
       error: (x) => {
         expect(x).toEqual("API is down");
         done();
@@ -33,18 +28,21 @@ describe("http.post", () => {
   });
 
   it('should return a PromiseObservable with a resolve promise as text', (done) => {
-    (fetch as any).mockResponseOnce(JSON.stringify({ products: [] }));
-    post("toto.com", "text").subscribe((x) => {
-        expect(x).toEqual(`{"products":[]}`);
+    const newProduct = {id: '1', name: 'product1'};
+    const expectedResult = {products: [newProduct]};
+    (fetch as any).mockResponseOnce(JSON.stringify(expectedResult));
+    post("toto.com", "text", {body: JSON.stringify(newProduct)}).subscribe((x) => {
+        expect(x).toEqual(JSON.stringify(expectedResult));
         done();
       });
   });
 
   it('should return a PromiseObservable with a resolve promise as Blob', (done) => {
-    const resObj = { products: [] };
-    (fetch as any).mockResponseOnce(JSON.stringify(resObj));
-    post("toto.com", "blob").subscribe(async (x: Blob) => {
-        expect(await x.text()).toEqual(JSON.stringify(resObj));
+    const newProduct = {id: '1', name: 'product1'};
+    const expectedResult = {products: [newProduct]};
+    (fetch as any).mockResponseOnce(JSON.stringify(expectedResult));
+    post("toto.com", "blob", {body: JSON.stringify(newProduct)}).subscribe(async (x: Blob) => {
+        expect(await x.text()).toEqual(JSON.stringify(expectedResult));
         done();
       });
   });
