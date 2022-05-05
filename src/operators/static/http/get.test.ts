@@ -8,7 +8,7 @@ describe("http.get", () => {
   });
   it("should return a PromiseObservable with a resolved promise", (done) => {
     (fetch as any).mockResponseOnce(JSON.stringify({ products: [] }));
-    get("toto.com", "json").subscribe((x) => {
+    get("toto.com", {type: "json"}).subscribe((x) => {
       expect(x).toEqual({ products: [] });
       done();
     });
@@ -24,7 +24,7 @@ describe("http.get", () => {
 
   it("should return a PromiseObservable with a rejected promise", (done) => {
     (fetch as any).mockReject(() => Promise.reject("API is down"));
-    get("toto.com", "json").subscribe({
+    get("toto.com", {type: "json"}).subscribe({
       error: (x) => {
         expect(x).toEqual("API is down");
         done();
@@ -34,7 +34,7 @@ describe("http.get", () => {
 
   it('should return a PromiseObservable with a resolve promise as text', (done) => {
     (fetch as any).mockResponseOnce(JSON.stringify({ products: [] }));
-    get("toto.com", "text").subscribe((x) => {
+    get("toto.com", {type: "text"}).subscribe((x) => {
         expect(x).toEqual(`{"products":[]}`);
         done();
       });
@@ -43,7 +43,7 @@ describe("http.get", () => {
   it('should return a PromiseObservable with a resolve promise as Blob', (done) => {
     const resObj = { products: [] };
     (fetch as any).mockResponseOnce(JSON.stringify(resObj));
-    get("toto.com", "blob").subscribe(async (x: Blob) => {
+    get("toto.com", {type: "blob"}).subscribe(async (x: Blob) => {
         expect(await x.text()).toEqual(JSON.stringify(resObj));
         done();
       });

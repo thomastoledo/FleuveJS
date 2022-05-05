@@ -1,12 +1,12 @@
 
 import { PromiseObservable } from "../../../observable/promise-observable";
-  
-export type GetResultOption = 'text' | 'json' | 'blob';
+import { HttpOptions } from "./http-types";
+
+
 
   export const get = function<T = any>(
     url: RequestInfo,
-    type: GetResultOption = 'json',
-    init?: RequestInit | undefined, 
+    {type, ...init}: HttpOptions = {type: 'json'}
   ): PromiseObservable<T | string | Blob>{
     return new PromiseObservable<T | string | Blob>(new Promise((resolve, reject) => {
       fetch(url, {...init, method: 'GET'})
