@@ -3,6 +3,7 @@ import { until } from "../../predicates/until";
 import { map } from "../../transform/map";
 import { preProcess } from "./pre-process";
 import { tap } from "../../side-effects/tap";
+import { filter } from "../../predicates/filter";
 
 describe("preProcess", () => {
   it("will succeed", () => expect(true).toBe(true));
@@ -28,19 +29,21 @@ describe("preProcess", () => {
   });
 
   it("should apply the pre-processing operations every time we compile", () => {
-    const toCall = jest.fn((x) => console.log('x', x));
-    const obs$ = preProcess<number>(tap((x) => toCall(x)));
+    const toCall = jest.fn();
+    const obs$ = preProcess<number>(filter((x) => {
+      toCall();
+      return x !== 5;
+    }));
     obs$.next(
       ...(() => {
         const sequence = [];
-        for (let i = 0; i < 200; i++) {
+        for (let i = 0; i < 10; i++) {
           sequence.push(i);
         }
         return sequence;
       })()
     );
-    console.log('obs', obs$)
     obs$.compile(map((x) => x * 2));
-    expect(toCall).toHaveBeenCalledTimes(400);
+    expect(toCall).toHaveBeenCalledTimes(19);
   });
 });

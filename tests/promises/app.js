@@ -1,4 +1,4 @@
-import { http, map, switchMap } from "../../bundle/observable.bundle.js";
+import { http, map } from "../../bundle/observable.bundle.js";
 
 const obs$ = http
   .get("https://my-json-server.typicode.com/nugetchar/fleuvejsDb/users");

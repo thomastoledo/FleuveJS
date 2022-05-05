@@ -59,10 +59,9 @@ export class MutableObservable<T = never>
       return this;
     }
 
-    this._innerSequence = newSequence;
-    return this.next(
-      ...(this._innerSequence = newSequence).map((event) => event.value)
-    );
+    this._triggerExecution(this._innerSequence = newSequence, this._subscribers);
+    
+    return this;
   }
 
   next(...events: T[]): this {
