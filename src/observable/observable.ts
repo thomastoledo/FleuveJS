@@ -7,15 +7,12 @@ import {
 import {
   isInstanceOfSubscriber,
   subscriberOf,
-  OnComplete,
-  OnError,
   OnNext,
   Subscriber,
   Subscription,
 } from "../models/subscription";
 
 import {Types} from '../models/types';
-
 export class Observable<T = never> implements Types.Observable<T> {
 
   protected _innerSequence: OperationResult<T>[];

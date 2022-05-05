@@ -53,7 +53,9 @@ var MutableObservable = /** @class */ (function (_super) {
         }
         var newSequence = this._buildNewSequence(this._innerSequence
             .filter(function (event) { return !event.isOperationError(); })
-            .map(function (event) { return event.value; }), operations).filter(function (event) { return !event.isMustStop(); });
+            .map(function (event) { return event.value; }), 
+        // [...operations, ...this._preProcessOperations]
+        operations).filter(function (event) { return !event.isMustStop(); });
         var idxError = newSequence.findIndex(function (opRes) { return opRes.isOperationError(); });
         if (idxError > -1) {
             this._innerSequence = newSequence.slice(0, idxError);

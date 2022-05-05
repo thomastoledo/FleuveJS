@@ -3,13 +3,13 @@ import { PromiseObservable } from "../../../observable/promise-observable";
   
 export type GetResultOption = 'text' | 'json' | 'blob';
 
-  export const get = function<T = any>(
+  export const post = function<T = any>(
     url: RequestInfo,
     type: GetResultOption = 'json',
     init?: RequestInit | undefined, 
   ): PromiseObservable<T | string | Blob>{
     return new PromiseObservable<T | string | Blob>(new Promise((resolve, reject) => {
-      fetch(url, {...init, method: 'GET'})
+      fetch(url, {...init, method: 'POST'})
       .then((res) => {
         if (type === 'text') {
           return resolve(res.text());

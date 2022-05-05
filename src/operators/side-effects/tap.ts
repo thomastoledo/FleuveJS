@@ -4,7 +4,7 @@ import {
   } from "../../models/operator";
   
   export const tap = function <T = any>(
-    f: OperatorFunction<T, boolean>
+    f: OperatorFunction<T, void>
   ): OperatorFunction<T, OperationResult<T>> {
     return (source: T) => {
         f(source);
