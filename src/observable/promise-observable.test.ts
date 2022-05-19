@@ -58,7 +58,7 @@ describe("PromiseObservable", () => {
 
     it("should not execute the subscriber", () => {
       const subscriber: Subscriber = subscriberOf(jest.fn());
-      const obs$ = new PromiseObservable(Promise.reject());
+      const obs$ = new PromiseObservable(Promise.reject('nope'));
       obs$.subscribe(subscriber);
       expect(subscriber.next).not.toHaveBeenCalled();
     });
