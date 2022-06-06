@@ -91,6 +91,7 @@ export class Observable<T = never> implements Types.Observable<T> {
       }
       
       _subscriber.next && _subscriber.next(operationResult.value);
+        
     }
 
     this._isComplete && _subscriber.complete && _subscriber.complete();

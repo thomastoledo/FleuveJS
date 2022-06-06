@@ -9,6 +9,13 @@ export namespace Types {
     subscribe(subscriber: OnNext<T> | Subscriber<T>): Subscription;
   }
 
+  // export interface ObservableInnerState<T = never> {
+  //   _innerSequence: OperationResult<T>[];
+  //   _subscribers: Subscriber<T>[];
+  //   _isComplete: boolean;
+  //   _error?: Error;
+  // }
+
   export interface MutableObservable<T = never> extends Observable<T> {
     next(...events: T[]): this;
     compile(...operations: OperatorFunction<T, OperationResult<any>>[]): this;

@@ -32,6 +32,7 @@ export class ObservableFork<T>
     this._isComplete = (sourceObs$ as any)._isComplete;
 
     this.sourceObs$.subscribe({
+      name: 'subscriber fork constructor',
       next: (value) => {
         this._subscribers
           .filter((s) => s.next)
@@ -76,6 +77,7 @@ export class ObservableFork<T>
 
     const newSequence: OperationResult<T>[] = [];
     const sourceSequence = (this.sourceObs$ as any)._innerSequence as OperationResult<T>[]; // FIXME ew
+
     for (let i = 0, l = sourceSequence.length; i < l; i++) {
       try {
         if (sourceSequence[i].isOperationError()) {
@@ -100,7 +102,9 @@ export class ObservableFork<T>
 
     return new Subscription(
       () =>
-        (this._subscribers = this._subscribers.filter((s) => s !== subscriber))
+        (this._subscribers = this._subscribers.filter(
+          (s) => s !== subscriber
+        ))
     );
   }
 

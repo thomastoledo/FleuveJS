@@ -9,7 +9,7 @@ const obs$ = http
     buildDOMUserList(document.getElementById("results"), users);
   });
 
-const users = [];
+let users = [];
 
 const generateBtn = document.getElementById("generateBtn");
 generateBtn.addEventListener("click", generateNewUser);
@@ -52,13 +52,12 @@ function generateNewUser() {
     }
   );
 
-  const sub = post$.pipe(map(({id}) => [...users, {id, username}])).subscribe({
+  post$.pipe(map(({id}) => ({id, username}))).subscribe({
     next: (res) => {
-        users = res;
+        users.push(res);
         resetDOMUserList(document.getElementById("results"));
         buildDOMUserList(document.getElementById("results"), users);
     },
     error: (err) => console.error(err),
   });
-  sub.unsubscribe();
 }

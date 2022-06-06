@@ -31,6 +31,7 @@ var ObservableFork = /** @class */ (function (_super) {
         _this.operators = operators;
         _this._isComplete = sourceObs$._isComplete;
         _this.sourceObs$.subscribe({
+            name: 'subscriber fork constructor',
             next: function (value) {
                 _this._subscribers
                     .filter(function (s) { return s.next; })

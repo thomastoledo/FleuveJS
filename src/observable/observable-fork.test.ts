@@ -4,6 +4,9 @@ import { ObservableFork } from "./observable-fork";
 import { fail } from "../helpers/function.helper";
 import { Observable } from "./observable";
 import { Subscription } from "../models/subscription";
+import { promisify } from "util";
+import { PromiseObservable } from "./promise-observable";
+import { doesNotMatch } from "assert";
 
 describe("ObservableFork", () => {
 
@@ -143,7 +146,7 @@ describe("ObservableFork", () => {
       );
       mut$.next(100);
       const completeCb = jest.fn();
-      forked$.subscribe({
+      forked$.subscribe({ 
         next: (x) => expect(x).toEqual(100),
         error: () => fail(`Should not trigger the onError callback`),
         complete: completeCb
@@ -163,6 +166,20 @@ describe("ObservableFork", () => {
       forked$ = fork(mut$);
       expect((forked$ as any)._error).toEqual(new Error("fork error"));
     });
+
+    it('should work', (done) => {
+      const promiseObs$ = new PromiseObservable<number>(new Promise((res) => setTimeout(() => res(1), 2000)));
+      const fork$ = promiseObs$.pipe();
+      const spy = jest.fn();
+      fork$.subscribe({
+        next: (res) => {
+          spy();
+          expect(spy).toHaveBeenCalledTimes(1);
+          done();
+        }
+      });
+
+    })
   });
 
   describe("subscribe", () => {

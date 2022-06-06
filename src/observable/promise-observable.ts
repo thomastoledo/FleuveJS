@@ -55,7 +55,8 @@ export class PromiseObservable<T>
     this._subscribers.push(_subscriber);
 
     const handler = () => this.executeSubscriber(_subscriber, this._innerSequence);
-    this.promise.finally(handler);
+
+    this.promise.then(handler);
     return new Subscription(
       () =>
         (this._subscribers = this._subscribers.filter((s) => s !== subscriber))
