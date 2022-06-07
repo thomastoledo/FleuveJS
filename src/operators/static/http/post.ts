@@ -1,8 +1,6 @@
 import { PromiseObservable } from "../../../observable/promise-observable";
 import { HttpOptions } from "./http-types";
 
-export type GetResultOption = "text" | "json" | "blob";
-
 export const post = function <T = any>(
   url: RequestInfo,
   { type, ...init }: HttpOptions = { type: "json" }
@@ -10,6 +8,12 @@ export const post = function <T = any>(
   return new PromiseObservable<T | string | Blob>(
     new Promise((resolve, reject) => {
       fetch(url, { ...init, method: "POST" })
+      .then((res) => {
+        if (!res.ok) {
+          throw Error(res.statusText);
+        }
+        return res;
+      })
         .then((res) => {
           if (type === "text") {
             return resolve(res.text());

@@ -11,6 +11,12 @@ import { HttpOptions } from "./http-types";
     return new PromiseObservable<T | string | Blob>(new Promise((resolve, reject) => {
       fetch(url, {...init, method: 'GET'})
       .then((res) => {
+        if (!res.ok) {
+          throw Error(res.statusText);
+        }
+        return res;
+      })
+      .then((res) => {
         if (type === 'text') {
           return resolve(res.text());
         }
