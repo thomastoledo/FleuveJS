@@ -23,7 +23,7 @@ In short:
 Any contribution and / or feedback is welcomed!
 
 ## Installation
-`npm i observablejs`
+`npm i fleuvejs`
 
 Or, if you'd prefer to work on a vanilla project:
 
