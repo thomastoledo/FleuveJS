@@ -27,6 +27,12 @@ export var put = function (url, _a) {
     return new PromiseObservable(new Promise(function (resolve, reject) {
         fetch(url, __assign(__assign({}, init), { method: "PUT" }))
             .then(function (res) {
+            if (!res.ok) {
+                throw Error(res.statusText);
+            }
+            return res;
+        })
+            .then(function (res) {
             if (type === "text") {
                 return resolve(res.text());
             }

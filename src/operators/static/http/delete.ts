@@ -1,13 +1,13 @@
 import { PromiseObservable } from "../../../observable/promise-observable";
 import { HttpOptions } from "./http-types";
 
-export const post = function <T = any>(
+export const del = function <T = any>(
   url: RequestInfo,
   { type, ...init }: HttpOptions = { type: "json" }
 ): PromiseObservable<T | string | Blob> {
   return new PromiseObservable<T | string | Blob>(
     new Promise((resolve, reject) => {
-      fetch(url, { ...init, method: "POST" })
+      fetch(url, { ...init, method: "DELETE" })
       .then((res) => {
         if (!res.ok) {
           throw Error(res.statusText);

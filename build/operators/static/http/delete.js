@@ -21,11 +21,11 @@ var __rest = (this && this.__rest) || function (s, e) {
     return t;
 };
 import { PromiseObservable } from "../../../observable/promise-observable";
-export var get = function (url, _a) {
-    if (_a === void 0) { _a = { type: 'json' }; }
+export var del = function (url, _a) {
+    if (_a === void 0) { _a = { type: "json" }; }
     var type = _a.type, init = __rest(_a, ["type"]);
     return new PromiseObservable(new Promise(function (resolve, reject) {
-        fetch(url, __assign(__assign({}, init), { method: 'GET' }))
+        fetch(url, __assign(__assign({}, init), { method: "DELETE" }))
             .then(function (res) {
             if (!res.ok) {
                 throw Error(res.statusText);
@@ -33,10 +33,10 @@ export var get = function (url, _a) {
             return res;
         })
             .then(function (res) {
-            if (type === 'text') {
+            if (type === "text") {
                 return resolve(res.text());
             }
-            if (type === 'blob') {
+            if (type === "blob") {
                 return resolve(res.blob());
             }
             return resolve(res.json());

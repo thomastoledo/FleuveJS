@@ -1,7 +1,10 @@
-import { get as GET } from './get';
-import { post as POST } from './post';
-export var http;
-(function (http) {
-    http.get = GET;
-    http.post = POST;
-})(http || (http = {}));
+import { get } from './get';
+import { post } from './post';
+import { put } from './put';
+import { del } from './delete';
+export var http = {
+    get: get,
+    post: post,
+    put: put,
+    delete: del
+};

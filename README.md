@@ -23,12 +23,12 @@ In short:
 Any contribution and / or feedback is welcomed!
 
 ## Installation
-`npm i observablejs`
+`npm i fleuvejs`
 
 Or, if you'd prefer to work on a vanilla project:
 
 ```js
-import { Observable } from 'https://unpkg.com/observablejs@latest/bundle/observable.bundle.js';
+import {of, map, mutable} from 'https://unpkg.com/fleuvejs@latest/bundle/fleuve.bundle.js';
 ```
 
 ## Observables, MutableObservables and ObservableForks

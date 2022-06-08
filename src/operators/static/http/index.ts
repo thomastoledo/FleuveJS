@@ -1,6 +1,11 @@
-import {get as GET} from './get';
-import {post as POST} from './post';
-export namespace http {
-    export const get = GET; 
-    export const post = POST;
+import {get} from './get';
+import {post} from './post';
+import {put} from './put';
+import {del} from './delete';
+
+export const http = {
+    get,
+    post,
+    put,
+    delete: del
 }

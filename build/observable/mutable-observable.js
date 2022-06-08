@@ -13,10 +13,14 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-var __spreadArray = (this && this.__spreadArray) || function (to, from) {
-    for (var i = 0, il = from.length, j = to.length; i < il; i++, j++)
-        to[j] = from[i];
-    return to;
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
 };
 import { OperationResult, OperationResultFlag, } from "../models/operator";
 import { Observable } from "./observable";
@@ -58,7 +62,7 @@ var MutableObservable = /** @class */ (function (_super) {
         }
         var newSequence = this._buildNewSequence(this._innerSequence
             .filter(function (event) { return !event.isOperationError(); })
-            .map(function (event) { return event.value; }), __spreadArray(__spreadArray([], operations), this._preProcessOperations)).filter(function (event) { return !event.isMustStop(); });
+            .map(function (event) { return event.value; }), __spreadArray(__spreadArray([], operations, true), this._preProcessOperations, true)).filter(function (event) { return !event.isMustStop(); });
         var idxError = newSequence.findIndex(function (opRes) { return opRes.isOperationError(); });
         if (idxError > -1) {
             this._innerSequence = newSequence.slice(0, idxError);
