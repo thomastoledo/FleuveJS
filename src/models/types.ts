@@ -1,20 +1,13 @@
 import { OperationResult, OperatorFunction } from "./operator";
-import { OnNext, Subscriber, Subscription } from "./subscription";
+import { SubscribeFunction } from "./subscription";
 
 export namespace Types {
   export interface Observable<T = never> {
     pipe<U = any>(
       ...operations: OperatorFunction<T, OperationResult<U>>[]
     ): Observable<U>;
-    subscribe(subscriber: OnNext<T> | Subscriber<T>): Subscription;
+    subscribe: SubscribeFunction<T>;
   }
-
-  // export interface ObservableInnerState<T = never> {
-  //   _innerSequence: OperationResult<T>[];
-  //   _subscribers: Subscriber<T>[];
-  //   _isComplete: boolean;
-  //   _error?: Error;
-  // }
 
   export interface MutableObservable<T = never> extends Observable<T> {
     next(...events: T[]): this;
@@ -27,6 +20,10 @@ export namespace Types {
   }
 
   export interface PromiseObservable<T = never> extends Observable<T> {}
+
+  export interface ProxyObservable<T = never> extends Observable<T> {
+    (...args: any): any;
+  }
 }
 
 export type Observable<T> = Types.Observable<T>;
