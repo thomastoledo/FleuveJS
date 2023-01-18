@@ -28,7 +28,7 @@ Any contribution and / or feedback is welcomed!
 Or, if you'd prefer to work on a vanilla project:
 
 ```js
-import {of, map, mutable} from 'https://unpkg.com/fleuvejs@latest/bundle/fleuve.bundle.js';
+import {of, map, mutable} from 'https://unpkg.com/fleuvejs@latest/bundle/observable.bundle.js';
 ```
 
 ## Observables, MutableObservables and ObservableForks
