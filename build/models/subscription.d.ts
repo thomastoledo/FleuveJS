@@ -24,4 +24,7 @@ export interface OnError {
 export interface OnComplete {
     (): void;
 }
+export interface SubscribeFunction<T> {
+    (subscriber: OnNext<T> | Subscriber<T>): Subscription;
+}
 export {};

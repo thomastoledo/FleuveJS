@@ -20,10 +20,6 @@ export namespace Types {
   }
 
   export interface PromiseObservable<T = never> extends Observable<T> {}
-
-  export interface ProxyObservable<T = never> extends Observable<T> {
-    (...args: any): any;
-  }
 }
 
 export type Observable<T> = Types.Observable<T>;

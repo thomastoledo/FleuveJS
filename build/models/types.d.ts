@@ -1,9 +1,9 @@
 import { OperationResult, OperatorFunction } from "./operator";
-import { OnNext, Subscriber, Subscription } from "./subscription";
+import { SubscribeFunction } from "./subscription";
 export declare namespace Types {
     interface Observable<T = never> {
         pipe<U = any>(...operations: OperatorFunction<T, OperationResult<U>>[]): Observable<U>;
-        subscribe(subscriber: OnNext<T> | Subscriber<T>): Subscription;
+        subscribe: SubscribeFunction<T>;
     }
     interface MutableObservable<T = never> extends Observable<T> {
         next(...events: T[]): this;

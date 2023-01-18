@@ -79,18 +79,6 @@ obs$.subscribe(42);
 obs$.subscribe(subscriberOf((x) => console.log(x)));
 
 ```
-### Add an event listener
-*Do not use anymore: will be deprecated and maybe replaced by a better implementation.*
-You can bind users interactions to an Observable.
-
-```html
-<button id="clickMe">Click Me</button>
-```
-
-```js
-const obs$ = onEvent(document.getElementById("clickMe"), "click");
-obs$.subscribe((event) => console.log('event triggered', event));
-```
 
 ## How To Use MutableObservables
 
@@ -182,6 +170,23 @@ obs$.subscribe(stat => displayStat(stat));
 fetch('someUrl')
     .then(res => res.json())
     .then(stats => obs$.next(...stats));
+```
+
+#### `fromFunction` - static
+*This operator is static: it means your cannot use it as a parameter for methods such as `pipe` or `compile`*
+
+This operator allows you to create a special kind of Observable: it wraps a given function. Each time the function is called, all the subscribers are notified.
+You can also fork this Observable by using the `fork` operator with the `asObservable` method.
+
+```ts
+function sum(...args: number[]) {
+    return args.reduce((acc, curr) => acc + curr, 0);
+}
+
+const sum$ = fromFunction(sum);
+const fork$ = fork(sum$.asObservable(), map((x) => x * 2));
+
+fork$.subscribe({next: (res) => console.log(res)}); // this should display "8"
 ```
 
 #### `map`
@@ -294,79 +299,26 @@ Used on a `preProcess` static operator, it will create a new `MutableObservable`
 - atLeastTimes: check there are at least n events matching a predicate
 - atMostTimes: check there are at most n events matching a predicate
 - catchError: catch any error and treat it. Prevents onError to be called
-- debounce : debounces the processing of event values
-- throttle : throttles the processing of event values
-- reduce : reduces the Observable sequence to a unique value
-- min : find the min value (with or without predicate)
-- max : find the max value (with or without predicate)
-- slice : returns a section of the Observable sequence (just like the slice method of the Array prototype)
+- debounce: debounces the processing of event values
+- throttle: throttles the processing of event values
+- reduce: reduces the Observable sequence to a unique value
+- min: find the min value (with or without predicate)
+- max: find the max value (with or without predicate)
+- slice: returns a section of the Observable sequence (just like the slice method of the Array prototype)
+- some: returns true if at least one event matches a predicate
 
 
 ### Static
-#### Functions
-- around
-- before
-- after
-- whenThrowing
-- onFunction
-- debounceFn
-- throttleFn
-- onceFn
-- timesFn
-- memoize (under consideration)
-
-Example:
-```js
-function divide(x, y) {
-    if (y === 0) {
-        throw new Error('Invalid Denominator');
-    }
-    console.log(`x / y = ${x/y}`)
-    return x / y;
-}
-
-const aroundDivide$ = around(divide);
-const beforeDivide$ = before(divide);
-const afterDivide$ = after(divide);
-const whenThrowing = whenThrowing(divide);
-
-aroundDivide$.subscribe((x) => console.log('Around division:', x));
-beforeDivide$.subscribe(() => console.log('Before division'));
-afterDivide$.subscribe((x) => console.log('After division:', x));
-whenThrowing$.subscribe((err) => console.log('Throwing division:', err));
-
-// Should display 'Around division: undefined', 'x / y = 2', 'Around division: 2'
-aroundDivide$(10, 5);
-
-// Should display 'Before division', 'x / y = 2'
-beforeDivide$(10, 5);
-
-// Should display 'x / y = 2', 'After division: 2'
-afterDivide$(10, 5);
-
-// Should display 'Throwing: Error: Invalid Denominator'
-whenThrowing$(10, 0);
-```
 
 #### Creation
 - compose: to compose finite and infinite Observable creators
 
 #### Asynchronous
 - websocket
-- promise
 
 #### Replacement
-- replace
 - replaceNth
 - replaceN
-- replaceAll
-
-#### Predicates
-- or
-- and
-- xor
-- not
 
 ### Allow to work with IndexedDB
-### Allow to work with Promises
 ### Allow to work with RxJs Observables

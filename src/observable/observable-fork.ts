@@ -24,7 +24,7 @@ export class ObservableFork<T>
   private operators: OperatorFunction<T, OperationResult<any>>[] = [];
 
   constructor(
-    private sourceObs$: Observable<T>,
+    private sourceObs$: Types.Observable<T>,
     ...operators: OperatorFunction<T, OperationResult<any>>[]
   ) {
     super();

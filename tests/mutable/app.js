@@ -78,9 +78,10 @@ searchBar.addEventListener("input", () => {
   contactList$.pipe(
       map((contactList) => contactList.filter((contact) =>  `${contact.firstname}${contact.lastname}${contact.phone}`.toLowerCase().includes(term))),
       tap((filteredList) => {
+        const contactListBody = document.querySelector(".contact-list__body");
+        contactListBody.innerHTML = '';
         filteredList.forEach((contact) => {
               const contactDivList = buildContactListEntry(contact);
-              const contactListBody = document.querySelector(".contact-list__body");
               contactListBody.append(...contactDivList);
           })
       }));

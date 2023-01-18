@@ -6,7 +6,7 @@ export declare class ObservableFork<T> extends Observable<T> implements Types.Ob
     private sourceObs$;
     private subscriptions;
     private operators;
-    constructor(sourceObs$: Observable<T>, ...operators: OperatorFunction<T, OperationResult<any>>[]);
+    constructor(sourceObs$: Types.Observable<T>, ...operators: OperatorFunction<T, OperationResult<any>>[]);
     subscribe(subscriber: Subscriber<T> | OnNext<T>): Subscription;
     close(): void;
     private unsubscribe;

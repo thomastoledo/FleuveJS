@@ -13,14 +13,10 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
-    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
-        if (ar || !(i in from)) {
-            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
-            ar[i] = from[i];
-        }
-    }
-    return to.concat(ar || Array.prototype.slice.call(from));
+var __spreadArray = (this && this.__spreadArray) || function (to, from) {
+    for (var i = 0, il = from.length, j = to.length; i < il; i++, j++)
+        to[j] = from[i];
+    return to;
 };
 import { isFunction } from "../helpers/function.helper";
 import { isInstanceOfSubscriber, subscriberOf, Subscription, } from "../models";
@@ -45,7 +41,7 @@ var PromiseObservable = /** @class */ (function (_super) {
         for (var _i = 0; _i < arguments.length; _i++) {
             operations[_i] = arguments[_i];
         }
-        return fork.apply(void 0, __spreadArray([this], operations, false));
+        return fork.apply(void 0, __spreadArray([this], operations));
     };
     PromiseObservable.prototype.subscribe = function (subscriber) {
         var _this = this;
