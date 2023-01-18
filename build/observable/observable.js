@@ -1,11 +1,7 @@
-var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
-    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
-        if (ar || !(i in from)) {
-            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
-            ar[i] = from[i];
-        }
-    }
-    return to.concat(ar || Array.prototype.slice.call(from));
+var __spreadArray = (this && this.__spreadArray) || function (to, from) {
+    for (var i = 0, il = from.length, j = to.length; i < il; i++, j++)
+        to[j] = from[i];
+    return to;
 };
 import { filterNonFunctions, isFunction } from "../helpers/function.helper";
 import { OperationResult, OperationResultFlag, } from "../models/operator";
@@ -105,7 +101,7 @@ var Observable = /** @class */ (function () {
         return res;
     };
     Observable.prototype._executeOperations = function (value, operators) {
-        var computedValue = this._computeValue.apply(this, __spreadArray([value], filterNonFunctions.apply(void 0, operators), false));
+        var computedValue = this._computeValue.apply(this, __spreadArray([value], filterNonFunctions.apply(void 0, operators)));
         return computedValue;
     };
     return Observable;

@@ -45,4 +45,8 @@ export function subscriberOf<T>(next?: OnNext<T>, error?: OnError, complete?: On
   export interface OnComplete {
     (): void
   };
+
+  export interface SubscribeFunction<T> {
+    (subscriber: OnNext<T> | Subscriber<T>): Subscription;
+  }
   

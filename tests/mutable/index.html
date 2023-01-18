@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Testing Observables</title>
+    <script defer type="module" src="app.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <main>
+        <button id="addContactBtn">
+            <span class="material-icons">
+                add_circle
+            </span>
+        </button>
+
+        <div class="contact-list">
+            <form class="search-bar-form">
+                <input id="searchBar" type="text" placeholder="Jean Dupont..." />
+            </form>
+            <div class="contact-list__headers">
+                <div>
+                    <h3>Prénom</h3>
+                </div>
+                <div>
+                    <h3>Nom</h3>
+                </div>
+                <div class="tel">
+                    <h3>Téléphone</h3>
+                </div>
+                <div></div>
+            </div>
+            <div class="contact-list__body">
+            </div>
+        </div>
+
+        <div class="create-contact hidden">
+            <form class="create-contact__form">
+                <input type="text" id="firstnameInput" placeholder="Votre prénom">
+                <input type="text" id="lastnameInput" placeholder="Votre nom de famille">
+                <input type="tel" id="phoneInput" placeholder="06 75 98 76 27">
+
+                <button id="addBtn" type="submit" disabled>OK</button>
+                <button id="cancelBtn" type="reset">Annuler</button>
+            </form>
+        </div>
+    </main>
+</body>
+
+</html>
