@@ -16,13 +16,21 @@ import {Types} from '../models/types';
 
 export class Observable<T = never> implements Types.Observable<T> {
 
-  protected _innerSequence: OperationResult<T>[];
+  protected _innerSequence!: OperationResult<T>[];
   protected _subscribers: Subscriber<T>[] = [];
   protected _isComplete: boolean = true;
   protected _error!: Error;
 
+  protected get innerSequence() {
+    return this._innerSequence;
+  }
+
+  protected set innerSequence(sequence: OperationResult<T>[]) {
+    this._innerSequence = sequence;
+  }
+
   constructor(...initialSequence: T[]) {
-    this._innerSequence = initialSequence.map(
+    this.innerSequence = initialSequence.map(
       (value) => new OperationResult(value)
     );
   }
@@ -33,7 +41,7 @@ export class Observable<T = never> implements Types.Observable<T> {
     const obs$ = new Observable<U>();
 
     const newSequence: OperationResult<U>[] = [];
-    const sourceSequence = this._innerSequence;
+    const sourceSequence = this.innerSequence;
     for (let i = 0, l = sourceSequence.length; i < l && !sourceSequence[i].isMustStop(); i++ ) {
       try {
         const operationResult = this._executeOperations(
@@ -50,7 +58,7 @@ export class Observable<T = never> implements Types.Observable<T> {
     }
 
     
-    obs$._innerSequence = newSequence;
+    obs$.innerSequence = newSequence;
     return obs$;
   }
 
@@ -63,7 +71,7 @@ export class Observable<T = never> implements Types.Observable<T> {
       ? subscriberOf(subscriber)
       : subscriber;
     this._subscribers.push(_subscriber);
-    this.executeSubscriber(_subscriber, this._innerSequence);
+    this.executeSubscriber(_subscriber, this.innerSequence);
 
     return new Subscription(
       () =>
@@ -111,7 +119,7 @@ export class Observable<T = never> implements Types.Observable<T> {
           i = operations.length;
           break;
         case OperationResultFlag.UnwrapSwitch:
-          res = new OperationResult(res.value._innerSequence.pop()?.value);
+          res = new OperationResult(res.value.innerSequence[res.value.innerSequence.length - 1]?.value);
           break;
         default:
           break;

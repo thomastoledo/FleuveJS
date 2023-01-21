@@ -112,16 +112,16 @@ describe("MutableObservable", () => {
   describe("next", () => {
     it("should set the new values of a Observable", () => {
       const obs$ = new MutableObservable<number>();
-      expect((obs$ as any)._innerSequence).toEqual([]);
+      expect((obs$ as any).innerSequence).toEqual([]);
       obs$.next(12);
       expect(
-        (obs$ as any)._innerSequence.map(
+        (obs$ as any).innerSequence.map(
           (item: OperationResult<number>) => item.value
         )
       ).toEqual([12]);
       obs$.next(12, 13, 14, 15, -1);
       expect(
-        (obs$ as any)._innerSequence.map(
+        (obs$ as any).innerSequence.map(
           (item: OperationResult<number>) => item.value
         )
       ).toEqual([12, 13, 14, 15, -1]);

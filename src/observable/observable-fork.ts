@@ -23,6 +23,14 @@ export class ObservableFork<T>
   private subscriptions: Subscription[] = [];
   private operators: OperatorFunction<T, OperationResult<any>>[] = [];
 
+  protected get innerSequence(): OperationResult<T>[] {
+      return (this.sourceObs$ as any).innerSequence;
+  }
+
+  protected set innerSequence(sequence: OperationResult<T>[]) {
+    this._innerSequence = sequence;
+}
+
   constructor(
     private sourceObs$: Types.Observable<T>,
     ...operators: OperatorFunction<T, OperationResult<any>>[]
@@ -32,7 +40,6 @@ export class ObservableFork<T>
     this._isComplete = (sourceObs$ as any)._isComplete;
 
     this.sourceObs$.subscribe({
-      name: 'subscriber fork constructor',
       next: (value) => {
         this._subscribers
           .filter((s) => s.next)
@@ -76,7 +83,7 @@ export class ObservableFork<T>
     this._subscribers.push(_subscriber);
 
     const newSequence: OperationResult<T>[] = [];
-    const sourceSequence = (this.sourceObs$ as any)._innerSequence as OperationResult<T>[]; // FIXME ew
+    const sourceSequence = (this.sourceObs$ as any).innerSequence as OperationResult<T>[]; // FIXME ew
 
     for (let i = 0, l = sourceSequence.length; i < l; i++) {
       try {

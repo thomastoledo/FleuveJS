@@ -25,10 +25,10 @@ export class PromiseObservable<T>
     super();
     this.promise = promise
       .then((res: T) => {
-        this._innerSequence.push(new OperationResult(res));
+        this.innerSequence.push(new OperationResult(res));
       })
       .catch((err: Error) => {
-        this._innerSequence.push(
+        this.innerSequence.push(
           new OperationResult(
             void 0 as any,
             OperationResultFlag.OperationError,
@@ -54,7 +54,7 @@ export class PromiseObservable<T>
       : subscriber;
     this._subscribers.push(_subscriber);
 
-    const handler = () => this.executeSubscriber(_subscriber, this._innerSequence);
+    const handler = () => this.executeSubscriber(_subscriber, this.innerSequence);
 
     this.promise.then(handler);
 
