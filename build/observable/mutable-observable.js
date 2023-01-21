@@ -56,18 +56,18 @@ var MutableObservable = /** @class */ (function (_super) {
         if (this._isComplete) {
             return this;
         }
-        var newSequence = this._buildNewSequence(this._innerSequence
+        var newSequence = this._buildNewSequence(this.innerSequence
             .filter(function (event) { return !event.isOperationError(); })
             .map(function (event) { return event.value; }), __spreadArray(__spreadArray([], operations), this._preProcessOperations)).filter(function (event) { return !event.isMustStop(); });
         var idxError = newSequence.findIndex(function (opRes) { return opRes.isOperationError(); });
         if (idxError > -1) {
-            this._innerSequence = newSequence.slice(0, idxError);
-            this.next.apply(this, this._innerSequence.map(function (event) { return event.value; }));
-            this._innerSequence.push(newSequence[idxError]);
+            this.innerSequence = newSequence.slice(0, idxError);
+            this.next.apply(this, this.innerSequence.map(function (event) { return event.value; }));
+            this.innerSequence.push(newSequence[idxError]);
             this._triggerExecution([newSequence[idxError]], this._subscribers);
             return this;
         }
-        this._triggerExecution(this._innerSequence = newSequence, this._subscribers);
+        this._triggerExecution(this.innerSequence = newSequence, this._subscribers);
         return this;
     };
     MutableObservable.prototype.next = function () {
@@ -78,8 +78,8 @@ var MutableObservable = /** @class */ (function (_super) {
         if (this._isComplete) {
             return this;
         }
-        this._innerSequence = this._buildNewSequence(events, this._preProcessOperations);
-        this._triggerExecution(this._innerSequence, this._subscribers);
+        this.innerSequence = this._buildNewSequence(events, this._preProcessOperations);
+        this._triggerExecution(this.innerSequence, this._subscribers);
         return this;
     };
     MutableObservable.prototype._buildNewSequence = function (events, operations) {

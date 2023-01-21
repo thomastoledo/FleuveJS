@@ -12,7 +12,7 @@ import {
   Subscription,
 } from "../models/subscription";
 
-import {Types} from '../models/types';
+import {ObservableFork, Types} from '../models/types';
 
 export class Observable<T = never> implements Types.Observable<T> {
 
@@ -20,6 +20,8 @@ export class Observable<T = never> implements Types.Observable<T> {
   protected _subscribers: Subscriber<T>[] = [];
   protected _isComplete: boolean = true;
   protected _error!: Error;
+
+  protected _forks: ObservableFork<any>[] = [];
 
   protected get innerSequence() {
     return this._innerSequence;

@@ -29,10 +29,10 @@ var PromiseObservable = /** @class */ (function (_super) {
         var _this = _super.call(this) || this;
         _this.promise = promise
             .then(function (res) {
-            _this._innerSequence.push(new OperationResult(res));
+            _this.innerSequence.push(new OperationResult(res));
         })
             .catch(function (err) {
-            _this._innerSequence.push(new OperationResult(void 0, OperationResultFlag.OperationError, err));
+            _this.innerSequence.push(new OperationResult(void 0, OperationResultFlag.OperationError, err));
         });
         return _this;
     }
@@ -52,7 +52,7 @@ var PromiseObservable = /** @class */ (function (_super) {
             ? subscriberOf(subscriber)
             : subscriber;
         this._subscribers.push(_subscriber);
-        var handler = function () { return _this.executeSubscriber(_subscriber, _this._innerSequence); };
+        var handler = function () { return _this.executeSubscriber(_subscriber, _this.innerSequence); };
         this.promise.then(handler);
         return new Subscription(function () {
             return (_this._subscribers = _this._subscribers.filter(function (s) { return s !== subscriber; }));

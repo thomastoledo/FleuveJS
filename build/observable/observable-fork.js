@@ -28,10 +28,11 @@ var ObservableFork = /** @class */ (function (_super) {
         _this.sourceObs$ = sourceObs$;
         _this.subscriptions = [];
         _this.operators = [];
+        _this._isClosed = false;
         _this.operators = operators;
         _this._isComplete = sourceObs$._isComplete;
+        _this.sourceObs$._forks.push(_this);
         _this.sourceObs$.subscribe({
-            name: 'subscriber fork constructor',
             next: function (value) {
                 _this._subscribers
                     .filter(function (s) { return s.next; })
@@ -61,6 +62,16 @@ var ObservableFork = /** @class */ (function (_super) {
         });
         return _this;
     }
+    Object.defineProperty(ObservableFork.prototype, "innerSequence", {
+        get: function () {
+            return this.sourceObs$.innerSequence;
+        },
+        set: function (sequence) {
+            this._innerSequence = sequence;
+        },
+        enumerable: false,
+        configurable: true
+    });
     ObservableFork.prototype.subscribe = function (subscriber) {
         var _this = this;
         if (!isFunction(subscriber) && !isInstanceOfSubscriber(subscriber)) {
@@ -71,7 +82,7 @@ var ObservableFork = /** @class */ (function (_super) {
             : subscriber;
         this._subscribers.push(_subscriber);
         var newSequence = [];
-        var sourceSequence = this.sourceObs$._innerSequence; // FIXME ew
+        var sourceSequence = this.sourceObs$.innerSequence; // FIXME ew
         for (var i = 0, l = sourceSequence.length; i < l; i++) {
             try {
                 if (sourceSequence[i].isOperationError()) {
@@ -84,12 +95,19 @@ var ObservableFork = /** @class */ (function (_super) {
                 i = l;
             }
         }
-        this.executeSubscriber(_subscriber, newSequence);
+        if (this._isClosed) {
+            (_subscriber.complete && _subscriber.complete());
+        }
+        else {
+            this.executeSubscriber(_subscriber, newSequence);
+        }
         return new Subscription(function () {
             return (_this._subscribers = _this._subscribers.filter(function (s) { return s !== subscriber; }));
         });
     };
     ObservableFork.prototype.close = function () {
+        this._isClosed = true;
+        this._forks.forEach(function (fork) { return fork.close(); });
         this._subscribers.forEach(function (s) { return s.complete && s.complete(); });
         this.unsubscribe();
     };

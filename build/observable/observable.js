@@ -14,8 +14,19 @@ var Observable = /** @class */ (function () {
         }
         this._subscribers = [];
         this._isComplete = true;
-        this._innerSequence = initialSequence.map(function (value) { return new OperationResult(value); });
+        this._forks = [];
+        this.innerSequence = initialSequence.map(function (value) { return new OperationResult(value); });
     }
+    Object.defineProperty(Observable.prototype, "innerSequence", {
+        get: function () {
+            return this._innerSequence;
+        },
+        set: function (sequence) {
+            this._innerSequence = sequence;
+        },
+        enumerable: false,
+        configurable: true
+    });
     Observable.prototype.pipe = function () {
         var operations = [];
         for (var _i = 0; _i < arguments.length; _i++) {
@@ -23,7 +34,7 @@ var Observable = /** @class */ (function () {
         }
         var obs$ = new Observable();
         var newSequence = [];
-        var sourceSequence = this._innerSequence;
+        var sourceSequence = this.innerSequence;
         for (var i = 0, l = sourceSequence.length; i < l && !sourceSequence[i].isMustStop(); i++) {
             try {
                 var operationResult = this._executeOperations(sourceSequence[i].value, operations);
@@ -36,7 +47,7 @@ var Observable = /** @class */ (function () {
                 i = l;
             }
         }
-        obs$._innerSequence = newSequence;
+        obs$.innerSequence = newSequence;
         return obs$;
     };
     Observable.prototype.subscribe = function (subscriber) {
@@ -48,7 +59,7 @@ var Observable = /** @class */ (function () {
             ? subscriberOf(subscriber)
             : subscriber;
         this._subscribers.push(_subscriber);
-        this.executeSubscriber(_subscriber, this._innerSequence);
+        this.executeSubscriber(_subscriber, this.innerSequence);
         return new Subscription(function () {
             return (_this._subscribers = _this._subscribers.filter(function (s) { return s !== subscriber; }));
         });
@@ -92,7 +103,7 @@ var Observable = /** @class */ (function () {
                     i = operations.length;
                     break;
                 case OperationResultFlag.UnwrapSwitch:
-                    res = new OperationResult((_a = res.value._innerSequence.pop()) === null || _a === void 0 ? void 0 : _a.value);
+                    res = new OperationResult((_a = res.value.innerSequence[res.value.innerSequence.length - 1]) === null || _a === void 0 ? void 0 : _a.value);
                     break;
                 default:
                     break;
