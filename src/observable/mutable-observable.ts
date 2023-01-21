@@ -43,7 +43,7 @@ export class MutableObservable<T = never>
     }
 
     const newSequence = this._buildNewSequence(
-      this._innerSequence
+      this.innerSequence
         .filter((event) => !event.isOperationError())
         .map((event) => event.value),
       [...operations, ...this._preProcessOperations]
@@ -51,15 +51,15 @@ export class MutableObservable<T = never>
     
     const idxError = newSequence.findIndex((opRes) => opRes.isOperationError());
     if (idxError > -1) {
-      this._innerSequence = newSequence.slice(0, idxError);
-      this.next(...this._innerSequence.map((event) => event.value));
+      this.innerSequence = newSequence.slice(0, idxError);
+      this.next(...this.innerSequence.map((event) => event.value));
 
-      this._innerSequence.push(newSequence[idxError]);
+      this.innerSequence.push(newSequence[idxError]);
       this._triggerExecution([newSequence[idxError]], this._subscribers);
       return this;
     }
 
-    this._triggerExecution(this._innerSequence = newSequence, this._subscribers);
+    this._triggerExecution(this.innerSequence = newSequence, this._subscribers);
     
     return this;
   }
@@ -69,11 +69,11 @@ export class MutableObservable<T = never>
       return this;
     }
 
-    this._innerSequence = this._buildNewSequence(
+    this.innerSequence = this._buildNewSequence(
       events,
       this._preProcessOperations
     );
-    this._triggerExecution(this._innerSequence, this._subscribers);
+    this._triggerExecution(this.innerSequence, this._subscribers);
     return this;
   }
 

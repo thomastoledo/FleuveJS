@@ -6,6 +6,9 @@ export declare class ObservableFork<T> extends Observable<T> implements Types.Ob
     private sourceObs$;
     private subscriptions;
     private operators;
+    private _isClosed;
+    protected get innerSequence(): OperationResult<T>[];
+    protected set innerSequence(sequence: OperationResult<T>[]);
     constructor(sourceObs$: Types.Observable<T>, ...operators: OperatorFunction<T, OperationResult<any>>[]);
     subscribe(subscriber: Subscriber<T> | OnNext<T>): Subscription;
     close(): void;

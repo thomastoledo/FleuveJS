@@ -22,6 +22,15 @@ export class ObservableFork<T>
 {
   private subscriptions: Subscription[] = [];
   private operators: OperatorFunction<T, OperationResult<any>>[] = [];
+  private _isClosed: boolean = false;
+
+  protected get innerSequence(): OperationResult<T>[] {
+      return (this.sourceObs$ as any).innerSequence;
+  }
+
+  protected set innerSequence(sequence: OperationResult<T>[]) {
+    this._innerSequence = sequence;
+}
 
   constructor(
     private sourceObs$: Types.Observable<T>,
@@ -30,9 +39,9 @@ export class ObservableFork<T>
     super();
     this.operators = operators;
     this._isComplete = (sourceObs$ as any)._isComplete;
+    (this.sourceObs$ as any)._forks.push(this);
 
     this.sourceObs$.subscribe({
-      name: 'subscriber fork constructor',
       next: (value) => {
         this._subscribers
           .filter((s) => s.next)
@@ -76,7 +85,7 @@ export class ObservableFork<T>
     this._subscribers.push(_subscriber);
 
     const newSequence: OperationResult<T>[] = [];
-    const sourceSequence = (this.sourceObs$ as any)._innerSequence as OperationResult<T>[]; // FIXME ew
+    const sourceSequence = (this.sourceObs$ as any).innerSequence as OperationResult<T>[]; // FIXME ew
 
     for (let i = 0, l = sourceSequence.length; i < l; i++) {
       try {
@@ -98,7 +107,12 @@ export class ObservableFork<T>
       }
     }
 
-    this.executeSubscriber(_subscriber, newSequence);
+    if (this._isClosed) {
+      (_subscriber.complete && _subscriber.complete());
+    } else {
+      this.executeSubscriber(_subscriber, newSequence);
+    }
+
 
     return new Subscription(
       () =>
@@ -109,6 +123,8 @@ export class ObservableFork<T>
   }
 
   close() {
+    this._isClosed = true;
+    this._forks.forEach((fork) => fork.close());
     this._subscribers.forEach((s) => s.complete && s.complete());
     this.unsubscribe();
   }

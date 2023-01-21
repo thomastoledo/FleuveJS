@@ -29,8 +29,8 @@ var ProxyObservable = /** @class */ (function (_super) {
                 catch (e) {
                     operationResult = new OperationResult(res, OperationResultFlag.OperationError, e);
                 }
-                _this._innerSequence = [operationResult];
-                _this._subscribers.forEach(function (s) { return _this.executeSubscriber(s, _this._innerSequence); });
+                _this.innerSequence = [operationResult];
+                _this._subscribers.forEach(function (s) { return _this.executeSubscriber(s, _this.innerSequence); });
                 if (operationResult.isOperationError()) {
                     throw operationResult.error;
                 }
@@ -48,7 +48,7 @@ var ProxyObservable = /** @class */ (function (_super) {
             }
             return instance.proxy.apply(instance, args);
         };
-        instance._innerSequence = [];
+        instance.innerSequence = [];
         res.subscribe = instance.subscribe.bind(instance);
         res.pipe = instance.pipe.bind(instance);
         res.asObservable = function () { return instance; };

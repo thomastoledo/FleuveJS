@@ -6,7 +6,7 @@ import { fail } from "../helpers/function.helper";
 describe("Observable", () => {
   it("should create a new Observable with no emitting value", (done) => {
     const obs$ = new Observable();
-    expect((obs$ as any)._innerSequence).toEqual([]);
+    expect((obs$ as any).innerSequence).toEqual([]);
     obs$.subscribe({
       next: (value) =>
         fail("A value has been emitted. Should not. Value was:", value),
@@ -76,7 +76,7 @@ describe("Observable", () => {
     it("should return a new Observable with no value", () => {
       const obs$ = new Observable<number>();
       const pipedobs$ = obs$.pipe(map((value: number) => value * 2));
-      expect((pipedobs$ as any)._innerSequence).toEqual([]);
+      expect((pipedobs$ as any).innerSequence).toEqual([]);
       pipedobs$.subscribe(() => {
         fail("Should not go there, Observable should not have been started");
       });
@@ -114,7 +114,7 @@ describe("Observable", () => {
     it("should return a filtered Observable with no value", () => {
       const obs$ = new Observable(12);
       const filteredobs$ = obs$.pipe(filter((value: number) => value < 10));
-      expect((filteredobs$ as any)._innerSequence).toEqual([]);
+      expect((filteredobs$ as any).innerSequence).toEqual([]);
       filteredobs$.subscribe(() => {
         fail("Should not go there, Observable should not have been started");
       });
