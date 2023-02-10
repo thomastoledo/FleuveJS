@@ -1,4 +1,4 @@
-import { OperationResult, OperationResultFlag, Types } from "../../../models";
+import { OnNext, OperationResult, OperationResultFlag, Subscriber, Subscription, Types } from "../../../models";
 import { Observable } from "../../../observable/observable";
 
 export interface ProxyObservableFunction<T = never> extends Types.Observable<T> {
@@ -34,11 +34,13 @@ class ProxyObservable<T = never> extends Observable<T> implements Types.Observab
   }
 
   public static create<T>(f: (...args: any) => T): ProxyObservableFunction<T> {
-      const instance = new ProxyObservable(f);
+      const instance = new ProxyObservable<T>(f);
       const res: ProxyObservableFunction<T> = (...args: any[]) => instance.proxy(...args);
 
       instance.innerSequence = [];
-      res.subscribe = instance.subscribe.bind(instance);
+      res.subscribe = function(subscriber?: OnNext<T> | Subscriber<T> | undefined): Subscription {
+        return instance.subscribe.apply(instance, [subscriber ?? ProxyObservable.DEFAULT_SUBSCRIBER]);
+      }
       res.pipe = instance.pipe.bind(instance);
       res.asObservable = () => instance;
       return res;

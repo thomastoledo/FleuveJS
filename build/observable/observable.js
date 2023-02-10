@@ -52,6 +52,10 @@ var Observable = /** @class */ (function () {
     };
     Observable.prototype.subscribe = function (subscriber) {
         var _this = this;
+        if (subscriber === undefined) {
+            this.executeSubscriber(Observable.DEFAULT_SUBSCRIBER, this.innerSequence);
+            return new Subscription();
+        }
         if (!isFunction(subscriber) && !isInstanceOfSubscriber(subscriber)) {
             throw new Error("Please provide either a function or a Subscriber");
         }
@@ -115,6 +119,7 @@ var Observable = /** @class */ (function () {
         var computedValue = this._computeValue.apply(this, __spreadArray([value], filterNonFunctions.apply(void 0, operators)));
         return computedValue;
     };
+    Observable.DEFAULT_SUBSCRIBER = subscriberOf(function () { });
     return Observable;
 }());
 export { Observable };

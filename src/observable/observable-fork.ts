@@ -73,7 +73,12 @@ export class ObservableFork<T>
     });
   }
 
-  subscribe(subscriber: Subscriber<T> | OnNext<T>): Subscription {
+  subscribe(subscriber?: Subscriber<T> | OnNext<T> | undefined): Subscription {
+    if (subscriber === undefined) {
+      //TODO - TTO: might be useful not to assign a default one but rather a new empty one each time
+      subscriber = ObservableFork.DEFAULT_SUBSCRIBER;
+    }
+
     if (!isFunction(subscriber) && !isInstanceOfSubscriber(subscriber)) {
       throw new Error("Please provide either a function or a Subscriber");
     }

@@ -49,7 +49,9 @@ var ProxyObservable = /** @class */ (function (_super) {
             return instance.proxy.apply(instance, args);
         };
         instance.innerSequence = [];
-        res.subscribe = instance.subscribe.bind(instance);
+        res.subscribe = function (subscriber) {
+            return instance.subscribe.apply(instance, [subscriber !== null && subscriber !== void 0 ? subscriber : ProxyObservable.DEFAULT_SUBSCRIBER]);
+        };
         res.pipe = instance.pipe.bind(instance);
         res.asObservable = function () { return instance; };
         return res;

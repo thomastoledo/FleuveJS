@@ -10,7 +10,7 @@ export declare class ObservableFork<T> extends Observable<T> implements Types.Ob
     protected get innerSequence(): OperationResult<T>[];
     protected set innerSequence(sequence: OperationResult<T>[]);
     constructor(sourceObs$: Types.Observable<T>, ...operators: OperatorFunction<T, OperationResult<any>>[]);
-    subscribe(subscriber: Subscriber<T> | OnNext<T>): Subscription;
+    subscribe(subscriber?: Subscriber<T> | OnNext<T> | undefined): Subscription;
     close(): void;
     private unsubscribe;
 }

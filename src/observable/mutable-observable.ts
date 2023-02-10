@@ -3,7 +3,7 @@ import {
   OperationResult,
   OperationResultFlag,
 } from "../models/operator";
-import { OnComplete, Subscriber } from "../models/subscription";
+import { OnComplete, OnNext, Subscriber, Subscription } from "../models/subscription";
 import { Types } from "../models/types";
 import { Observable } from "./observable";
 
@@ -75,6 +75,11 @@ export class MutableObservable<T = never>
     );
     this._triggerExecution(this.innerSequence, this._subscribers);
     return this;
+  }
+
+  subscribe(subscriber?: Subscriber<T> | OnNext<T> | undefined): Subscription {
+    //TODO - TTO: might be useful not to assign a default one but rather a new empty one each time
+    return super.subscribe(subscriber ?? MutableObservable.DEFAULT_SUBSCRIBER);
   }
 
   private _buildNewSequence(

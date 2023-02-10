@@ -12,7 +12,7 @@ You can also add some pipeline to the Observable, so what you receive has been p
 
 You can bind an Observable behavior to the user's behavior.
 
-A Observable can be forked into multiple other Observables: each Observable child will dispatch some data everytime their parent dispatch some data. You can also close your stream of data, and everyone will know the Observable is complete.
+An Observable can be forked into multiple other Observables: each Observable child will dispatch some data everytime their parent dispatch some data. You can also close your stream of data, and everyone will know the Observable is complete.
 
 In short:
 - potentially infinite source of data;
@@ -20,7 +20,7 @@ In short:
 - data pre-processing;
 - aims to allow practically anything as a source of data: a function execution, a user's action, a scalar value, a websocket...
 
-Any contribution and / or feedback is welcomed!
+Any contribution and / or feedback is welcome!
 
 ## Installation
 `npm i fleuvejs`

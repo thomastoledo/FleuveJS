@@ -45,6 +45,10 @@ var PromiseObservable = /** @class */ (function (_super) {
     };
     PromiseObservable.prototype.subscribe = function (subscriber) {
         var _this = this;
+        if (subscriber === undefined) {
+            //TODO - TTO: might be useful not to assign a default one but rather a new empty one each time
+            subscriber = PromiseObservable.DEFAULT_SUBSCRIBER;
+        }
         if (!isFunction(subscriber) && !isInstanceOfSubscriber(subscriber)) {
             throw new Error("Please provide either a function or a Subscriber");
         }

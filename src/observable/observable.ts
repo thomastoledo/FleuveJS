@@ -16,6 +16,8 @@ import {ObservableFork, Types} from '../models/types';
 
 export class Observable<T = never> implements Types.Observable<T> {
 
+  protected static readonly DEFAULT_SUBSCRIBER = subscriberOf(() => {});
+
   protected _innerSequence!: OperationResult<T>[];
   protected _subscribers: Subscriber<T>[] = [];
   protected _isComplete: boolean = true;
@@ -64,7 +66,12 @@ export class Observable<T = never> implements Types.Observable<T> {
     return obs$;
   }
 
-  subscribe(subscriber: OnNext<T> | Subscriber<T>): Subscription {
+  subscribe(subscriber?: OnNext<T> | Subscriber<T> | undefined): Subscription {
+    if (subscriber === undefined) {
+      this.executeSubscriber(Observable.DEFAULT_SUBSCRIBER, this.innerSequence);
+      return new Subscription();
+    }
+
     if (!isFunction(subscriber) && !isInstanceOfSubscriber(subscriber)) {
       throw new Error("Please provide either a function or a Subscriber");
     }
