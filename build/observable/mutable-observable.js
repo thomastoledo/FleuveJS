@@ -82,10 +82,6 @@ var MutableObservable = /** @class */ (function (_super) {
         this._triggerExecution(this.innerSequence, this._subscribers);
         return this;
     };
-    MutableObservable.prototype.subscribe = function (subscriber) {
-        //TODO - TTO: might be useful not to assign a default one but rather a new empty one each time
-        return _super.prototype.subscribe.call(this, subscriber !== null && subscriber !== void 0 ? subscriber : MutableObservable.DEFAULT_SUBSCRIBER);
-    };
     MutableObservable.prototype._buildNewSequence = function (events, operations) {
         var newSequence = [];
         for (var i = 0, l = events.length; i < l; i++) {
@@ -109,7 +105,7 @@ var MutableObservable = /** @class */ (function (_super) {
     };
     MutableObservable.prototype._triggerExecution = function (sequence, subscribers) {
         var _this = this;
-        subscribers.forEach(function (s) { return _this.executeSubscriber(s, sequence); });
+        subscribers.forEach(function (s) { return _this.executeSubscriber(sequence, s); });
     };
     return MutableObservable;
 }(Observable));

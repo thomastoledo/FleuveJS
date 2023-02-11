@@ -22,7 +22,7 @@ class ProxyObservable<T = never> extends Observable<T> implements Types.Observab
               }
 
               this.innerSequence = [operationResult];
-              this._subscribers.forEach((s) => this.executeSubscriber(s, this.innerSequence));
+              this._subscribers.forEach((s) => this.executeSubscriber(this.innerSequence, s));
 
               if (operationResult.isOperationError()) {
                   throw operationResult.error;
@@ -39,7 +39,7 @@ class ProxyObservable<T = never> extends Observable<T> implements Types.Observab
 
       instance.innerSequence = [];
       res.subscribe = function(subscriber?: OnNext<T> | Subscriber<T> | undefined): Subscription {
-        return instance.subscribe.apply(instance, [subscriber ?? ProxyObservable.DEFAULT_SUBSCRIBER]);
+        return instance.subscribe.apply(instance, [subscriber ?? void 0]);
       }
       res.pipe = instance.pipe.bind(instance);
       res.asObservable = () => instance;

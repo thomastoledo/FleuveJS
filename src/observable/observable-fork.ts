@@ -76,7 +76,7 @@ export class ObservableFork<T>
   subscribe(subscriber?: Subscriber<T> | OnNext<T> | undefined): Subscription {
     if (subscriber === undefined) {
       //TODO - TTO: might be useful not to assign a default one but rather a new empty one each time
-      subscriber = ObservableFork.DEFAULT_SUBSCRIBER;
+      subscriber = subscriberOf(() => {});
     }
 
     if (!isFunction(subscriber) && !isInstanceOfSubscriber(subscriber)) {
@@ -115,7 +115,7 @@ export class ObservableFork<T>
     if (this._isClosed) {
       (_subscriber.complete && _subscriber.complete());
     } else {
-      this.executeSubscriber(_subscriber, newSequence);
+      this.executeSubscriber(newSequence, _subscriber);
     }
 
 

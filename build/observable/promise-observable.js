@@ -47,7 +47,7 @@ var PromiseObservable = /** @class */ (function (_super) {
         var _this = this;
         if (subscriber === undefined) {
             //TODO - TTO: might be useful not to assign a default one but rather a new empty one each time
-            subscriber = PromiseObservable.DEFAULT_SUBSCRIBER;
+            subscriber = subscriberOf(function () { });
         }
         if (!isFunction(subscriber) && !isInstanceOfSubscriber(subscriber)) {
             throw new Error("Please provide either a function or a Subscriber");
@@ -56,7 +56,7 @@ var PromiseObservable = /** @class */ (function (_super) {
             ? subscriberOf(subscriber)
             : subscriber;
         this._subscribers.push(_subscriber);
-        var handler = function () { return _this.executeSubscriber(_subscriber, _this.innerSequence); };
+        var handler = function () { return _this.executeSubscriber(_this.innerSequence, _subscriber); };
         this.promise.then(handler);
         return new Subscription(function () {
             return (_this._subscribers = _this._subscribers.filter(function (s) { return s !== subscriber; }));

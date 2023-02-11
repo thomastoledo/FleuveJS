@@ -16,8 +16,6 @@ import {ObservableFork, Types} from '../models/types';
 
 export class Observable<T = never> implements Types.Observable<T> {
 
-  protected static readonly DEFAULT_SUBSCRIBER = subscriberOf(() => {});
-
   protected _innerSequence!: OperationResult<T>[];
   protected _subscribers: Subscriber<T>[] = [];
   protected _isComplete: boolean = true;
@@ -68,7 +66,7 @@ export class Observable<T = never> implements Types.Observable<T> {
 
   subscribe(subscriber?: OnNext<T> | Subscriber<T> | undefined): Subscription {
     if (subscriber === undefined) {
-      this.executeSubscriber(Observable.DEFAULT_SUBSCRIBER, this.innerSequence);
+      this.executeSubscriber(this.innerSequence);
       return new Subscription();
     }
 
@@ -80,7 +78,7 @@ export class Observable<T = never> implements Types.Observable<T> {
       ? subscriberOf(subscriber)
       : subscriber;
     this._subscribers.push(_subscriber);
-    this.executeSubscriber(_subscriber, this.innerSequence);
+    this.executeSubscriber(this.innerSequence, _subscriber);
 
     return new Subscription(
       () =>
@@ -89,14 +87,14 @@ export class Observable<T = never> implements Types.Observable<T> {
   }
 
   protected executeSubscriber(
-    _subscriber: Subscriber<T>,
-    sequence: OperationResult<T>[]
+    sequence: OperationResult<T>[],
+    _subscriber?: Subscriber<T> | undefined,
   ): void {
     for (let i = 0, l = sequence.length; i < l; i++) {
       let operationResult = sequence[i];
       if (operationResult.isOperationError()) {
         this._error = operationResult.error as Error;
-        (_subscriber.error || (() => {throw operationResult.error}))(operationResult.error as Error);
+        (_subscriber?.error || (() => {throw operationResult.error}))(operationResult.error as Error);
         break;
       }
       
@@ -108,11 +106,11 @@ export class Observable<T = never> implements Types.Observable<T> {
         break;
       }
       
-      _subscriber.next && _subscriber.next(operationResult.value);
+      _subscriber?.next && _subscriber.next(operationResult.value);
         
     }
 
-    this._isComplete && _subscriber.complete && _subscriber.complete();
+    this._isComplete && _subscriber?.complete && _subscriber.complete();
   }
 
   private _computeValue<T>(

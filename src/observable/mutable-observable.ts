@@ -77,11 +77,6 @@ export class MutableObservable<T = never>
     return this;
   }
 
-  subscribe(subscriber?: Subscriber<T> | OnNext<T> | undefined): Subscription {
-    //TODO - TTO: might be useful not to assign a default one but rather a new empty one each time
-    return super.subscribe(subscriber ?? MutableObservable.DEFAULT_SUBSCRIBER);
-  }
-
   private _buildNewSequence(
     events: T[],
     operations: OperatorFunction<T, any>[]
@@ -117,6 +112,6 @@ export class MutableObservable<T = never>
     sequence: OperationResult<T>[],
     subscribers: Subscriber<T>[]
   ): void {
-    subscribers.forEach((s) => this.executeSubscriber(s, sequence));
+    subscribers.forEach((s) => this.executeSubscriber(sequence, s));
   }
 }

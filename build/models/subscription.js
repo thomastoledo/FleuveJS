@@ -16,9 +16,14 @@ export function isInstanceOfSubscriber(obj) {
         for (var _i = 1; _i < arguments.length; _i++) {
             fields[_i - 1] = arguments[_i];
         }
-        return fields.some(function (field) { return obj[field] !== undefined && obj[field] !== null && isFunction(obj[field]); });
+        return fields.some(function (field) {
+            return obj[field] !== undefined &&
+                obj[field] !== null &&
+                isFunction(obj[field]);
+        });
     }
-    return !isFunction(obj) && hasAtLeastOneOfTheseFieldsAsAFunction(obj, 'next', 'error', 'complete');
+    return (!isFunction(obj) &&
+        hasAtLeastOneOfTheseFieldsAsAFunction(obj, "next", "error", "complete"));
 }
 export function subscriberOf(next, error, complete) {
     var subscriber = { next: next, error: error, complete: complete };
@@ -27,4 +32,3 @@ export function subscriberOf(next, error, complete) {
     }
     return subscriber;
 }
-;

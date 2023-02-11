@@ -76,7 +76,7 @@ var ObservableFork = /** @class */ (function (_super) {
         var _this = this;
         if (subscriber === undefined) {
             //TODO - TTO: might be useful not to assign a default one but rather a new empty one each time
-            subscriber = ObservableFork.DEFAULT_SUBSCRIBER;
+            subscriber = subscriberOf(function () { });
         }
         if (!isFunction(subscriber) && !isInstanceOfSubscriber(subscriber)) {
             throw new Error("Please provide either a function or a Subscriber");
@@ -103,7 +103,7 @@ var ObservableFork = /** @class */ (function (_super) {
             (_subscriber.complete && _subscriber.complete());
         }
         else {
-            this.executeSubscriber(_subscriber, newSequence);
+            this.executeSubscriber(newSequence, _subscriber);
         }
         return new Subscription(function () {
             return (_this._subscribers = _this._subscribers.filter(function (s) { return s !== subscriber; }));

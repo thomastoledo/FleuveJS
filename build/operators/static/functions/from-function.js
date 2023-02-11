@@ -30,7 +30,7 @@ var ProxyObservable = /** @class */ (function (_super) {
                     operationResult = new OperationResult(res, OperationResultFlag.OperationError, e);
                 }
                 _this.innerSequence = [operationResult];
-                _this._subscribers.forEach(function (s) { return _this.executeSubscriber(s, _this.innerSequence); });
+                _this._subscribers.forEach(function (s) { return _this.executeSubscriber(_this.innerSequence, s); });
                 if (operationResult.isOperationError()) {
                     throw operationResult.error;
                 }
@@ -50,7 +50,7 @@ var ProxyObservable = /** @class */ (function (_super) {
         };
         instance.innerSequence = [];
         res.subscribe = function (subscriber) {
-            return instance.subscribe.apply(instance, [subscriber !== null && subscriber !== void 0 ? subscriber : ProxyObservable.DEFAULT_SUBSCRIBER]);
+            return instance.subscribe.apply(instance, [subscriber !== null && subscriber !== void 0 ? subscriber : void 0]);
         };
         res.pipe = instance.pipe.bind(instance);
         res.asObservable = function () { return instance; };

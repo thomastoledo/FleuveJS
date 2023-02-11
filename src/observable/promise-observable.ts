@@ -47,7 +47,7 @@ export class PromiseObservable<T>
   subscribe(subscriber: Subscriber<T> | OnNext<T>): Subscription {
     if (subscriber === undefined) {
       //TODO - TTO: might be useful not to assign a default one but rather a new empty one each time
-      subscriber = PromiseObservable.DEFAULT_SUBSCRIBER;
+      subscriber = subscriberOf(() => {})
     }
 
     if (!isFunction(subscriber) && !isInstanceOfSubscriber(subscriber)) {
@@ -59,7 +59,7 @@ export class PromiseObservable<T>
       : subscriber;
     this._subscribers.push(_subscriber);
 
-    const handler = () => this.executeSubscriber(_subscriber, this.innerSequence);
+    const handler = () => this.executeSubscriber(this.innerSequence, _subscriber);
 
     this.promise.then(handler);
 

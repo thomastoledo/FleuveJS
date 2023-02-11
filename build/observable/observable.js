@@ -53,7 +53,7 @@ var Observable = /** @class */ (function () {
     Observable.prototype.subscribe = function (subscriber) {
         var _this = this;
         if (subscriber === undefined) {
-            this.executeSubscriber(Observable.DEFAULT_SUBSCRIBER, this.innerSequence);
+            this.executeSubscriber(this.innerSequence);
             return new Subscription();
         }
         if (!isFunction(subscriber) && !isInstanceOfSubscriber(subscriber)) {
@@ -63,17 +63,17 @@ var Observable = /** @class */ (function () {
             ? subscriberOf(subscriber)
             : subscriber;
         this._subscribers.push(_subscriber);
-        this.executeSubscriber(_subscriber, this.innerSequence);
+        this.executeSubscriber(this.innerSequence, _subscriber);
         return new Subscription(function () {
             return (_this._subscribers = _this._subscribers.filter(function (s) { return s !== subscriber; }));
         });
     };
-    Observable.prototype.executeSubscriber = function (_subscriber, sequence) {
+    Observable.prototype.executeSubscriber = function (sequence, _subscriber) {
         var _loop_1 = function (i, l) {
             var operationResult = sequence[i];
             if (operationResult.isOperationError()) {
                 this_1._error = operationResult.error;
-                (_subscriber.error || (function () { throw operationResult.error; }))(operationResult.error);
+                ((_subscriber === null || _subscriber === void 0 ? void 0 : _subscriber.error) || (function () { throw operationResult.error; }))(operationResult.error);
                 return "break";
             }
             if (operationResult.isFilterNotMatched()) {
@@ -82,7 +82,7 @@ var Observable = /** @class */ (function () {
             if (operationResult.isMustStop()) {
                 return "break";
             }
-            _subscriber.next && _subscriber.next(operationResult.value);
+            (_subscriber === null || _subscriber === void 0 ? void 0 : _subscriber.next) && _subscriber.next(operationResult.value);
         };
         var this_1 = this;
         for (var i = 0, l = sequence.length; i < l; i++) {
@@ -90,7 +90,7 @@ var Observable = /** @class */ (function () {
             if (state_1 === "break")
                 break;
         }
-        this._isComplete && _subscriber.complete && _subscriber.complete();
+        this._isComplete && (_subscriber === null || _subscriber === void 0 ? void 0 : _subscriber.complete) && _subscriber.complete();
     };
     Observable.prototype._computeValue = function (initValue) {
         var _a;
@@ -119,7 +119,6 @@ var Observable = /** @class */ (function () {
         var computedValue = this._computeValue.apply(this, __spreadArray([value], filterNonFunctions.apply(void 0, operators)));
         return computedValue;
     };
-    Observable.DEFAULT_SUBSCRIBER = subscriberOf(function () { });
     return Observable;
 }());
 export { Observable };

@@ -12,7 +12,7 @@ export namespace Types {
   export interface MutableObservable<T = never> extends Observable<T> {
     next(...events: T[]): this;
     compile(...operations: OperatorFunction<T, OperationResult<any>>[]): this;
-    close(): void;
+    close(): this;
   }
 
   export interface ObservableFork<T = never> extends Observable<T> {
