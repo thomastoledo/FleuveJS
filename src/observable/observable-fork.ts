@@ -75,7 +75,6 @@ export class ObservableFork<T>
 
   subscribe(subscriber?: Subscriber<T> | OnNext<T> | undefined): Subscription {
     if (subscriber === undefined) {
-      //TODO - TTO: might be useful not to assign a default one but rather a new empty one each time
       subscriber = subscriberOf(() => {});
     }
 

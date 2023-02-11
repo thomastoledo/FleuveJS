@@ -75,7 +75,6 @@ var ObservableFork = /** @class */ (function (_super) {
     ObservableFork.prototype.subscribe = function (subscriber) {
         var _this = this;
         if (subscriber === undefined) {
-            //TODO - TTO: might be useful not to assign a default one but rather a new empty one each time
             subscriber = subscriberOf(function () { });
         }
         if (!isFunction(subscriber) && !isInstanceOfSubscriber(subscriber)) {
