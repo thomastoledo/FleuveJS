@@ -14,7 +14,6 @@ interface UnsubscribeCallback {
 }
 
 export interface Subscriber<T = any> {
-  name?: string;
   next?: OnNext<T>, error?: OnError, complete?: OnComplete
 }
 
