@@ -44,7 +44,6 @@ export class PromiseObservable<T>
 
   subscribe(subscriber: Subscriber<T> | OnNext<T>): Subscription {
     if (subscriber === undefined) {
-      //TODO - TTO: might be useful not to assign a default one but rather a new empty one each time
       subscriber = subscriberOf(() => {})
     }
 

@@ -28,7 +28,11 @@ export class OperationResult<T> {
     }
 
     isOperationError(): boolean {
-        return this._flag === OperationResultFlag.OperationError
+        return this._flag === OperationResultFlag.OperationError;
+    }
+
+    isWaitingForValue(): boolean {
+        return this.flag === OperationResultFlag.WaitingForValue;
     }
 }
 
@@ -37,4 +41,5 @@ export enum OperationResultFlag {
     MustStop = 'MustStop',
     FilterNotMatched = 'FilterNotMatched',
     OperationError = 'OperationError',
+    WaitingForValue = 'WaitingForValue'
 }

@@ -6,6 +6,10 @@ export function filterNonFunctions(...fns: any[]): Function[] {
     return fns.filter((f) => isFunction(f));
 }
 
+export function isNotNullOrUndefined(value: any): boolean {
+  return value !== null && value !== undefined;
+}
+
 /* istanbul ignore next */
 export function fail(message: string = "", ...args: any[]) {
     const errorMsg = `Test failed\n${message} ${args.reduce(
