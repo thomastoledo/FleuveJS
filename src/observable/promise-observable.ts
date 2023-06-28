@@ -5,7 +5,6 @@ import {
   Subscriber,
   subscriberOf,
   Subscription,
-  Types,
 } from "../models";
 import {
   OperationResult,
@@ -17,7 +16,6 @@ import { Observable } from "./observable";
 
 export class PromiseObservable<T>
   extends Observable<T>
-  implements Types.PromiseObservable<T>
 {
   private promise: Promise<void>;
 

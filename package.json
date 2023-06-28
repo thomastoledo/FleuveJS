@@ -1,6 +1,6 @@
 {
   "name": "fleuvejs",
-  "version": "1.2.7",
+  "version": "1.2.8",
   "description": "A simple JavaScript Library for Observables",
   "main": "build/index.js",
   "scripts": {
@@ -26,11 +26,11 @@
   },
   "homepage": "https://github.com/nugetchar/FleuveJs#readme",
   "devDependencies": {
-    "@types/jest": "^26.0.23",
+    "@types/jest": "^27.5.2",
     "exports-loader": "^3.0.0",
     "jest": "^27.0.6",
     "jest-fetch-mock": "^3.0.3",
-    "ts-jest": "^27.0.3",
+    "ts-jest": "^27.1.5",
     "ts-loader": "^9.2.3",
     "tsconfig-paths-webpack-plugin": "^3.5.1",
     "typescript": "^4.3.4",

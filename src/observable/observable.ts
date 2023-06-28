@@ -11,10 +11,10 @@ import {
   Subscriber,
   Subscription,
 } from "../models/subscription";
+import { ObservableFork } from "./observable-fork";
 
-import {ObservableFork, Types} from '../models/types';
 
-export class Observable<T = never> implements Types.Observable<T> {
+export class Observable<T = never> {
 
   protected _innerSequence!: OperationResult<T>[];
   protected _subscribers: Subscriber<T>[] = [];

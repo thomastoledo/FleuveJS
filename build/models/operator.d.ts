@@ -1,4 +1,4 @@
-export declare type OperatorFunction<T, U = never> = (source: T) => U;
+export type OperatorFunction<T, U = never> = (source: T) => U;
 export declare class OperationResult<T> {
     private _value;
     private _flag?;

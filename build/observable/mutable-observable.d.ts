@@ -1,7 +1,6 @@
 import { OperatorFunction, OperationResult } from "../models/operator";
-import { Types } from "../models/types";
 import { Observable } from "./observable";
-export declare class MutableObservable<T = never> extends Observable<T> implements Types.MutableObservable<T> {
+export declare class MutableObservable<T = never> extends Observable<T> {
     private _preProcessOperations;
     constructor(...initialSequence: T[]);
     close(): this;

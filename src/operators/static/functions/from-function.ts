@@ -1,12 +1,14 @@
-import { OnNext, OperationResult, OperationResultFlag, Subscriber, Subscription, Types } from "../../../models";
+import { OnNext, OperationResult, OperationResultFlag, OperatorFunction, Subscriber, Subscription } from "../../../models";
 import { Observable } from "../../../observable/observable";
 
-export interface ProxyObservableFunction<T = never> extends Types.Observable<T> {
+export interface ProxyObservableFunction<T = never> {
   (...args: any): any;
   asObservable: () => ProxyObservable<T>;
+  subscribe: (subscriber?: OnNext<T> | Subscriber<T> | undefined) => Subscription;
+  pipe: <U>(...operations: OperatorFunction<T, OperationResult<U>>[]) => Observable<U>;
 }
 
-class ProxyObservable<T = never> extends Observable<T> implements Types.Observable<T> {
+class ProxyObservable<T = never> extends Observable<T> implements Observable<T> {
   private proxy: {(...args: any): T};
 
   private constructor(f: (...args: any) => T) {

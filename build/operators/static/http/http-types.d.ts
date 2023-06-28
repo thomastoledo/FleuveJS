@@ -1,4 +1,4 @@
-export declare type HttpOptions = RequestInit & {
+export type HttpOptions = RequestInit & {
     type?: HttpResultOption;
 };
-export declare type HttpResultOption = 'text' | 'json' | 'blob';
+export type HttpResultOption = 'text' | 'json' | 'blob';

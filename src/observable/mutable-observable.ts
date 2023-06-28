@@ -4,12 +4,10 @@ import {
   OperationResultFlag,
 } from "../models/operator";
 import { OnComplete, OnNext, Subscriber, Subscription } from "../models/subscription";
-import { Types } from "../models/types";
 import { Observable } from "./observable";
 
 export class MutableObservable<T = never>
   extends Observable<T>
-  implements Types.MutableObservable<T>
 {
   private _preProcessOperations: OperatorFunction<T, any>[] = [];
 
